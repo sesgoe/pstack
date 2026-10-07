@@ -12,7 +12,7 @@ reminder: New task? Playbook match or rigor needed -> apply /poteto-mode. Casual
 
 ## Non-negotiables
 
-**The user pushes.** When the user's instructions reserve pushing for themselves (for example their global `AGENTS.md`), no playbook pushes a branch, force-pushes, or opens, edits, merges, or arms a PR, and no subagent does either. Every playbook ends at the **PR hand-off** in `playbooks/opening-a-pr.md`. Babysit, Shipping, Autopilot-full, Autopilot-stack, and Orchestrate's landing steps start only after the user pushes and asks for them, and they still never push or merge.
+**The user approves each push.** When the user's instructions reserve that call for themselves (for example their global `AGENTS.md`), every playbook stops at the **PR hand-off** in `playbooks/opening-a-pr.md` and waits for the user's go-ahead before it pushes a branch or opens a PR. On the go-ahead, push and open the PRs per that playbook. The go-ahead covers the branches in that hand-off only. Force-pushing an already-pushed branch, merging, and arming auto-merge each need their own explicit ask, so Babysit, Shipping, Autopilot-full, Autopilot-stack, and Orchestrate's landing steps stop where they would push or merge and ask.
 
 The Principles section below grounds every trigger. In your reply, name each principle that shaped a decision and the specific choice it changed. Cite only principles whose leaf SKILL.md you read this session.
 

@@ -18,11 +18,12 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   - model invocation is allowed (no `disable-model-invocation`), so agents can run a review on
     their own work without the user typing `/interrogate`.
 
-- `skills/poteto-mode`: a "The user pushes" non-negotiable and a **PR hand-off** step in
-  `playbooks/opening-a-pr.md`. When the user's instructions reserve pushing for themselves, every
-  playbook stops before the first push: commits on a branch, an `interrogate` review (repeated after
-  each fix) ending in `VERDICT: APPROVE`, then a hand-off with the PR title, body, and the push and
-  create commands. Babysit, shipping, autopilot, and orchestrate landing wait for the user.
+- `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
+  in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook
+  stops before the first push: commits on a branch, an `interrogate` review (repeated after each
+  fix) ending in `VERDICT: APPROVE`, then a hand-off with the PR title and body that asks for the
+  go-ahead. On the go-ahead the agent pushes and opens the PRs. Force-push, merge, and auto-merge
+  need their own ask.
 
 ## Syncing with upstream
 

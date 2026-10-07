@@ -2,14 +2,14 @@
 
 Invoked at the end of every other playbook.
 
-**PR hand-off.** When the user pushes (see "The user pushes" in `SKILL.md`), follow this playbook up to the first push, then stop and hand off:
+**PR hand-off.** When the user approves each push (see "The user approves each push" in `SKILL.md`), follow this playbook up to the first push, then stop and ask:
 
 1. Commit to a branch in a worktree, shaped and ordered per **Commits**.
 2. Run `interrogate` on the branch against its base. Fix every Act On finding in a new commit, and run `interrogate` again on that fix. The hand-off waits for `VERDICT: APPROVE`.
 3. Run `/no-comments` and the deslop pass from **PRs**.
-4. Reply with the hand-off: the repo path and branch, the base branch, the commits, the final `interrogate` verdict with anything left in Consider, the PR title, and the PR body per **Titles** and **Descriptions**. Give the push and create commands for the resolved forge (for example `git push -u origin <branch>` and `gh pr create --base <base> --title "..." --body-file <file>`), with the body written to a file outside the repo. For a stack, give them in bottom-up order.
+4. Reply with the hand-off: the repo path and branch, the base branch, the commits, the final `interrogate` verdict with anything left in Consider, and the PR title and body per **Titles** and **Descriptions**. For a stack, list the branches bottom-up. Ask for the go-ahead.
 
-Everything after the push in this playbook (Readiness, Babysit) applies only once the user has pushed and asks for it.
+On the go-ahead, push and open the PRs per the rest of this playbook, and post the URLs. A subagent never pushes on its own. It returns the hand-off to the parent, which asks the user.
 
 **Worktree.** Work from a git worktree off main. Subagents inherit it. Multiple `Task` calls on the same branch each get their own worktree, or `git fetch && git reset --hard origin/<branch>` between them. Dirty branch with unrelated work: patch out, fresh worktree, apply. Snarled worktree: reset from main, redo minimally.
 
