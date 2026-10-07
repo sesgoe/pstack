@@ -2,6 +2,15 @@
 
 Invoked at the end of every other playbook.
 
+**PR hand-off.** When the user pushes (see "The user pushes" in `SKILL.md`), follow this playbook up to the first push, then stop and hand off:
+
+1. Commit to a branch in a worktree, shaped and ordered per **Commits**.
+2. Run `interrogate` on the branch against its base. Fix every Act On finding in a new commit, and run `interrogate` again on that fix. The hand-off waits for `VERDICT: APPROVE`.
+3. Run `/no-comments` and the deslop pass from **PRs**.
+4. Reply with the hand-off: the repo path and branch, the base branch, the commits, the final `interrogate` verdict with anything left in Consider, the PR title, and the PR body per **Titles** and **Descriptions**. Give the push and create commands for the resolved forge (for example `git push -u origin <branch>` and `gh pr create --base <base> --title "..." --body-file <file>`), with the body written to a file outside the repo. For a stack, give them in bottom-up order.
+
+Everything after the push in this playbook (Readiness, Babysit) applies only once the user has pushed and asks for it.
+
 **Worktree.** Work from a git worktree off main. Subagents inherit it. Multiple `Task` calls on the same branch each get their own worktree, or `git fetch && git reset --hard origin/<branch>` between them. Dirty branch with unrelated work: patch out, fresh worktree, apply. Snarled worktree: reset from main, redo minimally.
 
 **Commits.** Commit liberally. Rebase into small, ordered commits before opening PRs. Each commit is a future PR: landable, ordered to tell the story. Amend when the fix belongs in a just-made commit. New commit when separable.
@@ -33,4 +42,4 @@ After these sections, attach videos or screenshots when they prove a claim. Do n
 
 **Babysit.** Opening a PR does not start a babysit. Post the URL and keep building. Finish the phase or stack first. Run a separate babysit pass only when the user asks for one after the whole stack exists. A babysit for each new PR stalls the build and spends checks on commits that later waves restart. Push back when feedback drifts from intent.
 
-A subagent that opens a PR runs `interrogate`, `/deslop`, and `/no-comments`, and posts the URL. Then it returns to the parent without babysitting, unless it is an Autopilot-full or Autopilot-stack owner. That owner's brief assigns the babysit loop and is the ask `playbooks/babysit.md` waits for. The owner starts the loop after its code-ready report and reports merge-ready or STACK-READY as its playbook says. The rules here and in `playbooks/babysit.md` that hold babysitting until a whole stack is built do not apply to that owner.
+A subagent that opens a PR runs `interrogate`, `/deslop`, and `/no-comments`, and posts the URL. Under the PR hand-off, it stops at the hand-off instead and returns that to the parent. Then it returns to the parent without babysitting, unless it is an Autopilot-full or Autopilot-stack owner. That owner's brief assigns the babysit loop and is the ask `playbooks/babysit.md` waits for. The owner starts the loop after its code-ready report and reports merge-ready or STACK-READY as its playbook says. The rules here and in `playbooks/babysit.md` that hold babysitting until a whole stack is built do not apply to that owner.
