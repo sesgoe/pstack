@@ -1,7 +1,6 @@
 ---
 name: interrogate
-description: "Use for \"interrogate\", \"adversarial review\", \"multi-model review\", \"challenge this\", \"stress test this code\", \"find blind spots\", or \"tear this apart\". Multiple LLM reviewers challenge changes from independent angles."
-disable-model-invocation: true
+description: "Use for \"interrogate\", \"adversarial review\", \"multi-model review\", \"challenge this\", \"stress test this code\", \"find blind spots\", or \"tear this apart\", and for every code review of a branch, PR, or fix commit. Multiple LLM reviewers challenge changes from independent angles, executing the code rather than only reading it."
 ---
 
 # Interrogate
@@ -17,6 +16,9 @@ Identify what to review from context:
 - If the user points at specific files or a diff, use that
 - If on a feature branch, run `git diff main...HEAD` (or the appropriate base branch) for the full changeset
 - If the user's message references recent work, gather the relevant files
+- A fix commit made in response to an earlier review is its own scope and gets its own review. Fixes create bugs.
+
+Reviewers are fresh subagents that did not write the code. The author's own pass over its work is a checklist pass, not a review.
 
 Package the diff (or file contents) plus any surrounding context files the reviewers need to understand the code.
 
@@ -48,7 +50,7 @@ Use the `interrogate reviewers` line in the pstack settings file (`~/.cursor/rul
 For each reviewer:
 - `subagent_type`: `generalPurpose`
 - `model`: the configured `interrogate reviewers` entry, or the table default with no configured line. For an `auto` or `inherit-parent` entry, omit `model` so that reviewer runs on the parent model.
-- `readonly`: `true`
+- Reviewers may execute code only in a throwaway git worktree or temp directory, never in the author's working tree. Where your tool has a `readonly` flag, leave it off so reviewers can run code, and say this rule in the prompt.
 
 If your subagent tool rejects a configured entry, run that reviewer on the table default of its family and say so. Families go by prefix: `claude-*`, `gpt-*`, and `grok-*`. With no family match, use Reviewer A's default. If it rejects a table default, check the valid slugs in its error message or your harness's model list, pick the closest equivalent (prefer the highest-reasoning tier of the same family), spawn with it, and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.
 
@@ -57,8 +59,9 @@ Read `references/reviewer-prompt.md` and fill in the template with:
 2. The diff or file contents
 3. The review rubric from `references/rubric.md`
 4. The code-quality lens from `references/code-quality-review.md`
+5. The execute-and-probe lens from `references/execute-and-probe.md`
 
-The same filled template goes to all reviewers, so every model applies the code-quality lens.
+The same filled template goes to all reviewers, so every model applies all three lenses.
 
 ## Step 4, Synthesize
 
@@ -112,3 +115,11 @@ Present the verdict in this structure:
 
 ### Agreement Map
 [Where did models agree, where did they diverge, and what does the pattern of agreement/disagreement tell us?]
+
+### Design Principles
+[One line each for separation of concerns, programming by intention, encapsulation, high cohesion, low coupling: OK, or the violation with file:line.]
+
+### Executed
+[What the reviewers actually ran, against head and base. Green tests alone are not evidence.]
+
+End with exactly one line: `VERDICT: APPROVE` when Act On is empty, otherwise `VERDICT: CHANGES`.

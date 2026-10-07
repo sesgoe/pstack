@@ -26,9 +26,15 @@ You are reviewing whether the code achieves this intent well. Do NOT question th
 
 {CODE_QUALITY_CONTENTS}
 
+## Execute and Probe
+
+{EXECUTE_AND_PROBE_CONTENTS}
+
 ## Instructions
 
-Review the code through every lens in the rubric and the code-quality lens above that you find relevant. Do not force lenses that don't apply. A simple bug fix does not need paragraphs about architectural integrity.
+Review the code through every lens in the rubric and the code-quality lens above that you find relevant. Do not force lenses that don't apply. A simple bug fix does not need paragraphs about architectural integrity. The execute-and-probe lens always applies: write your test inputs before reading the implementation, run them, and report on every design principle.
+
+You may run code, tests, and scripts, but only in a throwaway git worktree or temp directory. Never modify the author's working tree.
 
 For each finding, provide:
 
@@ -37,7 +43,7 @@ For each finding, provide:
    - `warning`: Design concern, maintainability risk, or correctness issue that isn't immediately broken but will cause pain
    - `nit`: Style, naming, minor improvement.
 2. **Finding**: What the problem is, in concrete terms. Reference specific lines/functions.
-3. **Evidence**: Why you believe this is a problem. Show your reasoning. Don't just assert.
+3. **Evidence**: Why you believe this is a problem. Show your reasoning. Don't just assert. Where you executed something, give a reproduction: input, expected, actual.
 4. **Suggestion** (optional): What you'd do instead, if you have a concrete alternative. Skip this if you don't have a clear fix.
 
 ## What Makes a Good Finding
@@ -54,7 +60,7 @@ For each finding, provide:
 
 ## Output
 
-Return your findings as a structured list. If you have zero findings, say so. An empty review is a valid outcome.
+Return your findings as a structured list. If you have zero findings, say so. An empty review is a valid outcome. Your findings are never the complete pool: say "N findings so far", not "all findings".
 
 ```
 ## Findings
@@ -67,4 +73,14 @@ Return your findings as a structured list. If you have zero findings, say so. An
 
 ### 2. [Severity] Short title
 ...
+
+## Design Principles
+- Separation of concerns: OK | violation at file:line
+- Programming by intention: ...
+- Encapsulation: ...
+- High cohesion: ...
+- Low coupling: ...
+
+## Executed
+What you ran, on which inputs, against head and base. "Nothing" is an honest answer.
 ```
