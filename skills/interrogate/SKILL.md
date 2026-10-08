@@ -52,6 +52,16 @@ For each reviewer:
 - `model`: the configured `interrogate reviewers` entry, or the table default with no configured line. For an `auto` or `inherit-parent` entry, omit `model` so that reviewer runs on the parent model.
 - Reviewers may execute code only in a throwaway git worktree or temp directory, never in the author's working tree. Where your tool has a `readonly` flag, leave it off so reviewers can run code, and say this rule in the prompt.
 
+**`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
+
+1. Create the reviewer's own worktree at the reviewed commit: `wt=$(mktemp -d) && git worktree add --detach "$wt" <head>`.
+2. Write the filled reviewer prompt to a file outside the worktree, then run in the background (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits):
+   `codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o <out>.md - < <prompt>.md`
+   `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. Its worktree is the only tree it may change. Tell it so in the prompt.
+3. Spawn the other reviewers in the same message. When the command exits, read `<out>.md` as that reviewer's result, then `git worktree remove --force "$wt"`.
+
+If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.
+
 If your subagent tool rejects a configured entry, run that reviewer on the table default of its family and say so. Families go by prefix: `claude-*`, `gpt-*`, and `grok-*`. With no family match, use Reviewer A's default. If it rejects a table default, check the valid slugs in its error message or your harness's model list, pick the closest equivalent (prefer the highest-reasoning tier of the same family), spawn with it, and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.
 
 Read `references/reviewer-prompt.md` and fill in the template with:
