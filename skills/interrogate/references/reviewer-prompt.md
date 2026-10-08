@@ -34,7 +34,7 @@ You are reviewing whether the code achieves this intent well. Do NOT question th
 
 Review the code through every lens in the rubric and the code-quality lens above that you find relevant. Do not force lenses that don't apply. A simple bug fix does not need paragraphs about architectural integrity. The execute-and-probe lens always applies: write your test inputs before reading the implementation, run them, and report on every design principle.
 
-You may run code, tests, and scripts, but only in a throwaway git worktree or temp directory. Never modify the author's working tree.
+You start in your own git worktree. First run `git checkout --detach {HEAD_SHA}` there, so you review the right commit. Run any code, tests, and scripts in that worktree. It is the only tree you may change.
 
 For each finding, provide:
 

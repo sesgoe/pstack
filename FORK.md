@@ -18,7 +18,9 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   - model invocation is allowed (no `disable-model-invocation`), so agents can run a review on
     their own work without the user typing `/interrogate`;
   - `codex:<model>` reviewer entries run through `codex exec` in their own worktree, with full,
-    unsandboxed access, so a Claude-led review gets an OpenAI reviewer (2026-10-08).
+    unsandboxed access, so a Claude-led review gets an OpenAI reviewer (2026-10-08);
+  - every reviewer runs in its own git worktree (Claude Code `isolation: "worktree"`) and first
+    checks out the reviewed SHA, because that worktree starts at the remote's default branch (2026-10-08).
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook

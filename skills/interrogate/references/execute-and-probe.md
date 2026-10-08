@@ -8,7 +8,7 @@ code-quality lens do not already cover.
 ## Execute, Don't Read
 
 - Before you read the implementation, write down the inputs you will test. Inputs written after reading the code take the code's shape and miss what it misses.
-- Run the changed code on those inputs in a throwaway environment: a separate git worktree or temp directory, never the author's working tree. Where possible, probe read-only against a copy of real data.
+- Run the changed code on those inputs in your own worktree. Where possible, probe read-only against a copy of real data.
 - Compare results against the base commit every time, including when the head is green.
 - Green tests are not evidence. Say what you executed. If you could not execute something, say so and why; a finding from reading alone is weaker and must be labeled that way.
 
