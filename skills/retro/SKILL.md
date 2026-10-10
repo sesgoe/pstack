@@ -42,13 +42,14 @@ Pass reflect's synthesizer template verbatim, with the reviewer outputs inlined,
 >   - `global AGENTS.md`: for cross-repo preferences of the user. Its source is `agents/AGENTS.md` in github.com/sesgoe/fleet, not the installed copy.
 >   - `correct: <the repeated mistake>`: for anything a check could enforce (architecture, types, lint, test, hook, script). This replaces reflect's "route to Backlog" for mechanisms: the `correct` skill builds the check and proves it fails on the real past mistake.
 > - Skill-was-used applies only to skill-edit rows. A repo, global, or correct row needs no skill to have been invoked.
-> - Backlog: there is no tracker. List backlog items in the output for the user to decide; file nothing.
+> - Backlog: list backlog items in the output for the user to decide; file nothing yourself. If the repo tracks tasks as GitHub issues (its AGENTS.md says so), the parent offers to file each approved item there.
 >
 > Write any scratch file to your own `mktemp -d` directory.
 
 ### Apply
 
 - Present the full Accepted / Rejected / Backlog output and wait for the user's approval, as reflect says. Apply only what the user approves.
+- Backlog items the user keeps: file them as GitHub issues when the repo's AGENTS.md says it tracks tasks there, each with steps and a "done when" line.
 - `correct:` rows: run the `correct` skill on that mistake, after approval.
 - Repo and global AGENTS.md edits follow that repo's own rules for commits and pushes.
 - Skill edits to pstack skills go to the user's fork (`~/personal/pstack`, see its `FORK.md`): upstream skills get the smallest edit that works, and new behavior goes into a local wrapper like this one.
