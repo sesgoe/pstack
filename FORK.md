@@ -38,6 +38,19 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
 
+- `skills/retro` (ours, 2026-10-10): the user's retrospective, a wrapper over `reflect` in the
+  same shape as `pr-mode`. It replaces Matt Pocock's `/retro`. It appends retro's lenses
+  (navigation, guardrails, steering bloat, tool economy, information access, repo lessons) to
+  reflect's reviewer prompts, and routing overrides to its synthesizer: lessons can land in the
+  repo's AGENTS.md or a doc, in the global AGENTS.md, or go to `correct` to become a check;
+  the skill-was-used gate covers skill edits only; the backlog is listed, not filed.
+  `reflect` itself is unchanged.
+
+- `skills/writing-for-agents` (2026-10-10): copied unchanged from Matt Pocock's skills
+  (github.com/mattpocock/skills, `skills/productivity/writing-for-agents` at `6fd9479`, MIT,
+  license in the skill folder). pstack's `technical-writing` covers docs for people; this one
+  covers text for an agent's context (AGENTS.md lines, skill descriptions). `retro` loads it.
+
 ## Syncing with upstream
 
 ```sh
