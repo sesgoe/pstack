@@ -27,6 +27,10 @@ Pass each reflect reviewer template verbatim, then append this block:
 > - **Tool economy:** expensive or repeated tool calls a script, flag, or cached result would cut.
 > - **Information access:** a fact the agent needed but could not reach (logs, read-only access to a service, a doc).
 > - **Repo lessons:** facts about this repo or machine that are not about any skill (shared checkouts, environment quirks, procedures). Route them to the repo's AGENTS.md or a doc it links to.
+>
+> The "Scope to skills" rule above applies only to findings routed to a skill. Findings from these lenses route to `repo AGENTS.md: <path>`, `repo doc: <path>`, `global AGENTS.md`, or `correct: <the repeated mistake>`, and need no skill to have been used.
+>
+> Other reviewers run at the same time: write any transcript extract or scratch file to your own `mktemp -d` directory, never a fixed path like `/tmp/tx.txt`.
 
 ### Synthesizer prompt
 
@@ -39,6 +43,8 @@ Pass reflect's synthesizer template verbatim, with the reviewer outputs inlined,
 >   - `correct: <the repeated mistake>`: for anything a check could enforce (architecture, types, lint, test, hook, script). This replaces reflect's "route to Backlog" for mechanisms: the `correct` skill builds the check and proves it fails on the real past mistake.
 > - Skill-was-used applies only to skill-edit rows. A repo, global, or correct row needs no skill to have been invoked.
 > - Backlog: there is no tracker. List backlog items in the output for the user to decide; file nothing.
+>
+> Write any scratch file to your own `mktemp -d` directory.
 
 ### Apply
 
