@@ -28,6 +28,9 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   fix) ending in `VERDICT: APPROVE`, then a hand-off with the PR title and body that asks for the
   go-ahead. On the go-ahead the agent pushes and opens the PRs. Force-push, merge, and auto-merge
   need their own ask.
+  - The PR body has a `## Risk Analysis` section after `## Blast Radius` (2026-10-10): the door
+    and rollback, rollout order and failure window, failure modes, and mitigations taken or
+    skipped. Blast Radius keeps only who and what the change touches.
 
 ## Syncing with upstream
 
