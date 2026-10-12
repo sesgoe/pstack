@@ -39,7 +39,7 @@ Pass reflect's synthesizer template verbatim, with the reviewer outputs inlined,
 > **Routing overrides (retro).** These replace the matching rules above.
 > - Routing targets, in addition to skill edits:
 >   - `repo AGENTS.md: <path>`, or `repo doc: <path>` reached by a pointer from it. For lessons about one repo or machine. AGENTS.md takes pointers and short rules only; detail goes in a doc.
->   - `global AGENTS.md`: for cross-repo preferences of the user. Its source is `agents/AGENTS.md` in github.com/sesgoe/fleet, not the installed copy.
+>   - `global AGENTS.md`: for cross-repo preferences of the user. Its source is `global/AGENTS.md` in github.com/sesgoe/agent-config, not the installed copy. A rule that holds on only one role (controller, fleet box, work Mac) goes in that role's `global/AGENTS.<role>.md` there instead.
 >   - `correct: <the repeated mistake>`: for anything a check could enforce (architecture, types, lint, test, hook, script). This replaces reflect's "route to Backlog" for mechanisms: the `correct` skill builds the check and proves it fails on the real past mistake.
 > - Skill-was-used applies only to skill-edit rows. A repo, global, or correct row needs no skill to have been invoked.
 > - Backlog: list backlog items in the output for the user to decide; file nothing yourself. If the repo tracks tasks as GitHub issues (its AGENTS.md says so), the parent offers to file each approved item there.

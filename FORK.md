@@ -2,7 +2,7 @@
 
 A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a mirror of
 `cursor/plugins/pstack`) with a few local edits. Installed for Claude Code and Codex by
-`github.com/sesgoe/fleet` (`agents/skills.conf` pins a commit from this repo's `main`).
+`github.com/sesgoe/agent-config` (`skills.conf` pins a commit from this repo's `main`).
 
 ## Edits
 
@@ -56,5 +56,5 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
 ```sh
 jj git fetch --remote upstream      # or: git fetch upstream
 jj new main upstream/main -m "Merge upstream pstack"   # or: git merge upstream/main
-# resolve conflicts in the files listed above, then push main and bump the pin in fleet
+# resolve conflicts in the files listed above, then push main and bump the pin in agent-config
 ```
