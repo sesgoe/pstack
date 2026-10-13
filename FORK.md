@@ -40,7 +40,8 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
 
 - `skills/pr-mode` (ours, 2026-10-10): the user's entry point for PR work. It runs `poteto-mode`
   and adds local triggers (`verify-this` for Verification claims, a recommended
-  `thermo-nuclear-code-quality-review` on one-way doors). New workflow triggers go there, not
+  `thermo-nuclear-code-quality-review` on one-way doors, a stop-and-ask when the `interrogate`
+  loop stops converging, 2026-10-13). New workflow triggers go there, not
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
 
