@@ -75,6 +75,9 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   license in the skill folder). pstack's `technical-writing` covers docs for people; this one
   covers text for an agent's context (AGENTS.md lines, skill descriptions). `retro` loads it.
 
+- `AGENTS.md`, `scripts/check.sh`, and `.github/workflows/check.yml` (ours, 2026-10-13): the check
+  runs every `skills/*/scripts/*.test.sh`, starting with `render-prompt.test.sh`.
+
 ## Syncing with upstream
 
 ```sh
