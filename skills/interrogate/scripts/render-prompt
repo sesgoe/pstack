@@ -88,9 +88,9 @@ def main():
         "RUNNER": runner,
     }
     template = reference("reviewer-prompt.md").split("\n---\n", 1)[1]
-    missing = set(PLACEHOLDER.findall(template)) - values.keys()
-    if missing:
-        sys.exit(f"render-prompt: no value for {', '.join(sorted(missing))}")
+    slots = set(PLACEHOLDER.findall(template))
+    if slots != values.keys():
+        sys.exit(f"render-prompt: template slots {sorted(slots)} don't match values {sorted(values)}")
     prompt = PLACEHOLDER.sub(lambda m: values[m.group(1)], template).lstrip("\n")
 
     out = Path(tempfile.mkdtemp(prefix="interrogate-")) / "prompt.md"
