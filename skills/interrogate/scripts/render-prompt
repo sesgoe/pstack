@@ -38,11 +38,11 @@ def quoted(text):
     return "\n".join(f"> {line}".rstrip() for line in lines)
 
 
-def excluded(path, changed):
+def excluded(path, merge_base, head):
     norm = posixpath.normpath(path)
     if posixpath.isabs(norm) or norm == "." or norm.startswith("../") or norm == "..":
         sys.exit(f"render-prompt: --exclude {path}: not a path inside the repo, relative to its root")
-    if not any(name == norm or name.startswith(norm + "/") for name in changed):
+    if not git("diff-tree", "-r", "--no-renames", "--name-only", merge_base, head, "--", f":(top,literal){norm}"):
         sys.exit(f"render-prompt: --exclude {path}: matches no changed path")
     return f":(top,exclude,literal){norm}"
 
@@ -57,7 +57,8 @@ def main():
     parser.add_argument("--head", required=True, help="the reviewed commit")
     parser.add_argument("--base", required=True, help="diff from the merge base of this ref and --head")
     parser.add_argument("--exclude", action="append", default=[], metavar="PATH",
-                        help="leave PATH, relative to the repo root, out of the diff (repeatable), e.g. flake.lock")
+                        help="leave PATH, relative to the repo root, out of the diff (repeatable), e.g. flake.lock;"
+                             " exclude both sides of a rename, or its directory")
     parser.add_argument("--runner", metavar="SCRIPT",
                         help="name this reviewer the runner of SCRIPT, which writes outside the worktree")
     args = parser.parse_args()
@@ -68,9 +69,8 @@ def main():
     if not intent:
         sys.exit("render-prompt: empty intent")
     merge_base = git("merge-base", args.base, head).strip()
-    changed = git("diff-tree", "-r", "-M", "--name-only", merge_base, head).splitlines()
-    pathspec = ["--", *(excluded(path, changed) for path in args.exclude)]
-    diff = git("diff-tree", "-p", "-r", "-M", merge_base, head, *pathspec)
+    pathspec = ["--", *(excluded(path, merge_base, head) for path in args.exclude)]
+    diff = git("-c", "core.quotePath=false", "diff-tree", "-p", "-r", "-M", merge_base, head, *pathspec)
     if not diff.strip():
         sys.exit(f"render-prompt: empty diff for {args.base}...{head}")
 
