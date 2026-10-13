@@ -24,6 +24,8 @@ Package the diff or file contents with any surrounding context files the reviewe
 
 Before spawning reviewers, state the intent in one clear paragraph from the user's message, commit messages, the PR description if one exists, and the code. If you're unsure about the intent, ask the user before proceeding.
 
+The paragraph names the threat model: who sends the traffic or calls the code, and what that client actually sends. A finding that needs a client or adversary outside it goes under Noted.
+
 ## Step 3, Spawn Reviewers
 
 Launch all reviewers in a single message with the Task tool, one per entry on the `interrogate reviewers` line in the pstack settings file (`~/.cursor/rules/pstack-models.mdc` in Cursor, `~/.agents/pstack-models.md` in other harnesses), labeled Reviewer A, B, and so on to match the entry count. If the file or that line is missing, use the table defaults.
@@ -46,6 +48,8 @@ Every reviewer runs in its own git worktree, so it can't touch the author's tree
    `codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o <out>.md - < <prompt>.md`
    `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything.
 3. Spawn the other reviewers in the same message. When the command exits, read `<out>.md` as that reviewer's result, then `git worktree remove --force "$wt"`.
+
+**After the verdict**, remove the Claude Code reviewers' worktrees too. `isolation: "worktree"` leaves each one, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. For each: `git worktree remove -f -f <path>` (a locked worktree needs both), then `git branch -D worktree-agent-<id>`.
 
 If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.
 

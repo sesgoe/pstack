@@ -23,6 +23,12 @@ Reviewers, especially adversarial ones, tend to fill their review. If they don't
 
 "What if someone passes null here?" is only a finding if the caller can actually pass null. Trace the call site. If the input is validated upstream or the type system prevents it, dismiss the finding. Reviewers working from a diff can't always see the full call chain. You can.
 
+The same holds for security findings. A bypass that needs an adversary or client outside the threat model in the intent paragraph is Noted, not Act On.
+
+### Same Class Twice
+
+When a second finding of the same class lands in one unit (a function, a lifecycle), its Act On includes committing the table or harness test that would have caught both.
+
 ### Premature Abstraction Warnings
 
 Reviewers often suggest extracting functions, adding interfaces, or creating abstractions. Does this code need to change in a second way? If not, the abstraction is premature. Simple inline code that works beats a clean abstraction that's overkill for the current scope.

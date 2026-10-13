@@ -12,6 +12,14 @@ code-quality lens do not already cover.
 - Compare results against the base commit every time, including when the head is green.
 - Green tests are not evidence. Say what you executed. If you could not execute something, say so and why; a finding from reading alone is weaker and must be labeled that way.
 
+## Shared Machine
+
+You run on the author's machine with full access, beside the author's live processes:
+
+- Run network and process probes inside `unshare -rnm --pid --fork --mount-proc`, so they get their own network and PID namespace.
+- Signal only PIDs you started, by number. `pkill`, `killall`, and kill-by-pattern reach the author's processes.
+- Leave the author's ports, state directories, devices (adb, emulators), and real backends as you found them; start your own copies on free ports.
+
 ## What to Probe
 
 - Every alternative form of an input, including forms that combine two of them.
