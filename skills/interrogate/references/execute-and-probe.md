@@ -10,6 +10,7 @@ code-quality lens do not already cover.
 - Before you read the implementation, write down the inputs you will test. Inputs written after reading the code take the code's shape and miss what it misses.
 - Run the changed code on those inputs in your own worktree. Where possible, probe read-only against a copy of real data.
 - Compare results against the base commit every time, including when the head is green.
+- A comparison is evidence only once both sides ran and produced output. Fixture setup fails loudly (`set -euo pipefail`), and a row that fails to run reports FAIL, never "same".
 - Green tests are not evidence. Say what you executed. If you could not execute something, say so and why; a finding from reading alone is weaker and must be labeled that way.
 
 ## Shared Machine
@@ -17,6 +18,7 @@ code-quality lens do not already cover.
 You run on the author's machine with full access, beside the author's live processes:
 
 - Run network and process probes inside `unshare -rnm --pid --fork --mount-proc`, so they get their own network and PID namespace.
+- Put scratch repos, fixtures, and tool output under your own `mktemp -d` with `TMPDIR` exported to it, and remove it when done.
 - Signal only PIDs you started, by number. `pkill`, `killall`, and kill-by-pattern reach the author's processes.
 - Leave the author's ports, state directories, devices (adb, emulators), and real backends as you found them; start your own copies on free ports.
 - A script that writes outside your worktree (another host, the user's home, a Windows drive): run it end to end only when the prompt names you its runner. Otherwise run its pieces, with every output path pointed into your own `mktemp -d`.

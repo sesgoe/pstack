@@ -15,7 +15,7 @@ Identify what to review from context:
 - If on a feature branch, the scope is `main...HEAD` (or the appropriate base branch): `--base` and `--head` for `render-prompt` in Step 3.
 - If the user's message references recent work, gather the relevant files.
 - A fix commit made in response to an earlier review is its own scope and gets its own review. Fixes create bugs.
-- Before `VERDICT: APPROVE` on a change that took more than one fix round, review the whole series against the base once more. Each round's scope sees only its own commit, never how the commits fit together.
+- Before `VERDICT: APPROVE` on a change that took more than one fix round, review the whole series against the base once, as the final gate. Each earlier fix round reviews only its own fix commit. A series-pass finding that isn't a regression from the fixes goes to Consider.
 
 Reviewers are fresh subagents that did not write the code. The author's own pass over its work is a checklist pass, not a review.
 
@@ -25,7 +25,7 @@ Reviewers are fresh subagents that did not write the code. The author's own pass
 
 Before spawning reviewers, state the intent in one clear paragraph from the user's message, commit messages, the PR description if one exists, and the code. If you're unsure about the intent, ask the user before proceeding.
 
-The paragraph names the threat model: who sends the traffic or calls the code, and what that client actually sends. A finding that needs a client or adversary outside it goes under Noted.
+The paragraph names the threat model: who sends the traffic or calls the code, what that client actually sends, the environment it runs in (config, filenames, locale), and what a failure costs. A finding that needs a client, input, or environment outside it goes under Noted.
 
 ## Step 3, Spawn Reviewers
 

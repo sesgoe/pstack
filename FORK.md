@@ -33,6 +33,13 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     (intent, head SHA, the base...head diff with `--exclude` paths, the three lens references, and
     a `--runner` line for the Shared Machine rule) and prints the path of the written prompt.
     Step 3 renders every reviewer's prompt with it, the codex one included.
+  - from a retro on the render-prompt session, whose loop ran 6 rounds (2026-10-13): the threat
+    model also names the environment and what a failure costs, and findings outside it are Noted;
+    new "Cost of a Fix" in `lead-judgment.md` (a fix costs the next round's review; narrow before
+    adding; a specified pass-through interface keeps its semantics); Same Class Twice applies only
+    inside the threat model; fix rounds review their fix commit and the whole series once, as the
+    final gate; reviewers' scratch goes under their own `mktemp -d` with `TMPDIR`; a comparison
+    counts only when both sides ran.
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook
@@ -43,11 +50,15 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   - The PR body has a `## Risk Analysis` section after `## Blast Radius` (2026-10-10): the door
     and rollback, rollout order and failure window, failure modes, and mitigations taken or
     skipped. Blast Radius keeps only who and what the change touches.
+  - `playbooks/authoring-a-skill.md` step 2 runs every changed shell block as written, under
+    bash and zsh, success and failure (2026-10-13).
 
 - `skills/pr-mode` (ours, 2026-10-10): the user's entry point for PR work. It runs `poteto-mode`
   and adds local triggers (`verify-this` for Verification claims, a recommended
   `thermo-nuclear-code-quality-review` on one-way doors, a stop-and-ask when the `interrogate`
-  loop stops converging, and later-step findings going to the issue, 2026-10-13). New workflow triggers go there, not
+  loop stops converging, and later-step findings going to the issue, 2026-10-13; the stop also counts
+  rounds of mostly fallout or out-of-threat-model findings and a growing do-not-re-report list, and
+  forecasts the next round's yield, 2026-10-13). New workflow triggers go there, not
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
 

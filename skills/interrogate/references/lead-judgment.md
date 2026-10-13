@@ -23,11 +23,15 @@ Reviewers, especially adversarial ones, tend to fill their review. If they don't
 
 "What if someone passes null here?" is only a finding if the caller can actually pass null. Trace the call site. If the input is validated upstream or the type system prevents it, dismiss the finding. Reviewers working from a diff can't always see the full call chain. You can.
 
-The same holds for security findings. A bypass that needs an adversary or client outside the threat model in the intent paragraph is Noted, not Act On.
+The same holds for every finding, security or robustness. One that needs an adversary, client, input, config, or environment outside the threat model in the intent paragraph is Noted, not Act On. Before acting on a finding that depends on config or environment, check the real machine (for example `git config --show-origin --get-regexp '<keys>'`).
 
 ### Same Class Twice
 
-When a second finding of the same class lands in one unit (a function, a lifecycle), its Act On includes committing the table or harness test that would have caught both.
+When a second finding of the same class, inside the threat model, lands in one unit (a function, a lifecycle), its Act On includes committing the table or harness test that would have caught both. A repeated class outside the threat model stays Noted.
+
+### Cost of a Fix
+
+In a review loop, acting on a finding costs its fix plus the next round's review of that fix. "Real and cheap to fix" is no reason to Act On. Where a finding closes either way, narrow or delete before adding validation or a mechanism: added code is the next round's findings. An interface the task specified keeps its specified semantics. A flag specified as a pass-through to a tool (a git pathspec) stays one; wrapping it in your own rules turns the tool's documented behaviour into findings.
 
 ### Premature Abstraction Warnings
 
