@@ -12,13 +12,16 @@ from pathlib import Path
 
 REFERENCES = Path(__file__).resolve().parent.parent / "references"
 PLACEHOLDER = re.compile(r"\{([A-Z_]+)\}")
+DIFF_FLAGS = ["--no-color", "--no-ext-diff", "--no-textconv", "--no-relative",
+              "--src-prefix=a/", "--dst-prefix=b/"]
 
 
 def git(*args):
-    result = subprocess.run(["git", *args], capture_output=True, text=True)
+    result = subprocess.run(["git", *args], capture_output=True)
     if result.returncode != 0:
-        sys.exit(f"render-prompt: git {' '.join(args)}: {result.stderr.strip()}")
-    return result.stdout
+        stderr = result.stderr.decode("utf-8", "replace").strip()
+        sys.exit(f"render-prompt: git {' '.join(args)}: {stderr}")
+    return result.stdout.decode("utf-8", "replace")
 
 
 def fenced(text, lang):
@@ -28,8 +31,12 @@ def fenced(text, lang):
     return f"{fence}{lang}\n{body}\n{fence}"
 
 
+def quoted(text):
+    return "\n".join(f"> {line}".rstrip() for line in text.splitlines())
+
+
 def reference(name):
-    return (REFERENCES / name).read_text()
+    return (REFERENCES / name).read_text(encoding="utf-8")
 
 
 def main():
@@ -38,15 +45,18 @@ def main():
     parser.add_argument("--head", required=True, help="the reviewed commit")
     parser.add_argument("--base", required=True, help="diff from the merge base of this ref and --head")
     parser.add_argument("--exclude", action="append", default=[], metavar="PATH",
-                        help="leave PATH out of the diff (repeatable), e.g. flake.lock")
+                        help="leave PATH, relative to the repo root, out of the diff (repeatable), e.g. flake.lock")
     parser.add_argument("--runner", metavar="SCRIPT",
                         help="name this reviewer the runner of SCRIPT, which writes outside the worktree")
     args = parser.parse_args()
 
     head = git("rev-parse", "--verify", f"{args.head}^{{commit}}").strip()
     git("rev-parse", "--verify", f"{args.base}^{{commit}}")
-    pathspec = ["--", ".", *(f":(exclude){path}" for path in args.exclude)]
-    diff = git("diff", f"{args.base}...{head}", *pathspec)
+    intent = (sys.stdin.read() if args.intent == "-" else args.intent).strip()
+    if not intent:
+        sys.exit("render-prompt: empty intent")
+    pathspec = ["--", ":(top)", *(f":(top,exclude,literal){path}" for path in args.exclude)]
+    diff = git("diff", *DIFF_FLAGS, f"{args.base}...{head}", *pathspec)
     if not diff.strip():
         sys.exit(f"render-prompt: empty diff for {args.base}...{head}")
 
@@ -55,7 +65,7 @@ def main():
         runner = f" The prompt names you the runner of `{args.runner}`, so run it end to end."
 
     values = {
-        "INTENT": (sys.stdin.read() if args.intent == "-" else args.intent).strip(),
+        "INTENT": quoted(intent),
         "HEAD_SHA": head,
         "DIFF_OR_FILES": fenced(diff, "diff"),
         "RUBRIC_CONTENTS": reference("rubric.md"),
@@ -70,7 +80,7 @@ def main():
     prompt = PLACEHOLDER.sub(lambda m: values[m.group(1)], template).lstrip("\n")
 
     out = Path(tempfile.mkdtemp(prefix="interrogate-")) / "prompt.md"
-    out.write_text(prompt)
+    out.write_text(prompt, encoding="utf-8")
     print(out)
 
 

@@ -52,13 +52,13 @@ A worktree doesn't contain a script that writes outside it (to another host, or 
    `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything.
 3. Spawn the other reviewers in the same message. When the command exits, read `${p%/*}/out.md` as that reviewer's result, then `git worktree remove --force "$wt"`.
 
-**After the verdict**, remove the Claude Code reviewers' worktrees too. `isolation: "worktree"` leaves each one, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. For each: `git worktree remove -f -f <path>` (a locked worktree needs both), then `git branch -D worktree-agent-<id>`.
+**After the verdict**, remove the Claude Code reviewers' worktrees too. `isolation: "worktree"` leaves each one, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. For each: `git worktree remove -f -f <path>` (a locked worktree needs both), then `git branch -D worktree-agent-<id>`. Remove each rendered prompt's directory with `rm -rf "${p%/*}"`.
 
 If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.
 
 If your subagent tool rejects a configured entry, run that reviewer on its family's table default and say so. Families go by prefix: `claude-*` and `grok-*`. With no family match, use Reviewer A's default. If it rejects a table default, spawn with the closest equivalent from the valid slugs in its error message or your harness's model list (prefer the same family and reasoning tier), and open a separate PR to update the default table. Do not block the review on the slug issue. Never treat an alias entry as a rejected slug or apply either fallback to it.
 
-Render each reviewer's prompt with one call from the reviewed repo, where `<skill>` is this skill's directory:
+Render each reviewer's prompt with one call from anywhere in the reviewed repo, where `<skill>` is this skill's directory:
 
 ```sh
 p=$(<skill>/scripts/render-prompt --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
@@ -67,7 +67,7 @@ EOF
 )
 ```
 
-It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, such as `flake.lock`), and the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. A Claude Code reviewer's whole Agent prompt is `Read <path> in full and follow it.` A scope that isn't a diff (files the user points at) still gets the template filled by hand.
+It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path from the repo root, such as `flake.lock`), and the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. A Claude Code reviewer's whole Agent prompt is `Read <path> in full and follow it.` A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, and `{RUNNER}` empty unless that reviewer is the runner.
 
 ## Step 4, Synthesize
 

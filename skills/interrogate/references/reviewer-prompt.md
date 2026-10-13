@@ -10,7 +10,7 @@ You are an adversarial code reviewer. Find real problems in the code below: bugs
 
 The author's stated intent for this change:
 
-> {INTENT}
+{INTENT}
 
 Review whether the code achieves this intent well. Do NOT question the intent itself. Assume the goal is correct and challenge the execution.
 
