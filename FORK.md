@@ -29,6 +29,10 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     `execute-and-probe.md` (namespaced probes, signal only your own PIDs, leave the author's
     ports, devices, and backends alone), required by the reviewer prompt; Claude Code reviewer
     worktrees are removed after the verdict.
+  - `scripts/render-prompt` (2026-10-13): fills `references/reviewer-prompt.md` for one reviewer
+    (intent, head SHA, the base...head diff with `--exclude` paths, the three lens references, and
+    a `--runner` line for the Shared Machine rule) and prints the path of the written prompt.
+    Step 3 renders every reviewer's prompt with it, the codex one included.
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook

@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Render one interrogate reviewer prompt from references/reviewer-prompt.md.
+
+Run from the reviewed repo. Writes prompt.md into a fresh temp directory and prints its path.
+"""
+import argparse
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+REFERENCES = Path(__file__).resolve().parent.parent / "references"
+PLACEHOLDER = re.compile(r"\{([A-Z_]+)\}")
+
+
+def git(*args):
+    result = subprocess.run(["git", *args], capture_output=True, text=True)
+    if result.returncode != 0:
+        sys.exit(f"render-prompt: git {' '.join(args)}: {result.stderr.strip()}")
+    return result.stdout
+
+
+def fenced(text, lang):
+    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
+    fence = "`" * max(3, longest + 1)
+    body = text.rstrip("\n")
+    return f"{fence}{lang}\n{body}\n{fence}"
+
+
+def reference(name):
+    return (REFERENCES / name).read_text()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--intent", required=True, help="the Step 2 intent paragraph, or - to read it from stdin")
+    parser.add_argument("--head", required=True, help="the reviewed commit")
+    parser.add_argument("--base", required=True, help="diff from the merge base of this ref and --head")
+    parser.add_argument("--exclude", action="append", default=[], metavar="PATH",
+                        help="leave PATH out of the diff (repeatable), e.g. flake.lock")
+    parser.add_argument("--runner", metavar="SCRIPT",
+                        help="name this reviewer the runner of SCRIPT, which writes outside the worktree")
+    args = parser.parse_args()
+
+    head = git("rev-parse", "--verify", f"{args.head}^{{commit}}").strip()
+    git("rev-parse", "--verify", f"{args.base}^{{commit}}")
+    pathspec = ["--", ".", *(f":(exclude){path}" for path in args.exclude)]
+    diff = git("diff", f"{args.base}...{head}", *pathspec)
+    if not diff.strip():
+        sys.exit(f"render-prompt: empty diff for {args.base}...{head}")
+
+    runner = ""
+    if args.runner:
+        runner = f" The prompt names you the runner of `{args.runner}`, so run it end to end."
+
+    values = {
+        "INTENT": (sys.stdin.read() if args.intent == "-" else args.intent).strip(),
+        "HEAD_SHA": head,
+        "DIFF_OR_FILES": fenced(diff, "diff"),
+        "RUBRIC_CONTENTS": reference("rubric.md"),
+        "CODE_QUALITY_CONTENTS": reference("code-quality-review.md"),
+        "EXECUTE_AND_PROBE_CONTENTS": reference("execute-and-probe.md"),
+        "RUNNER": runner,
+    }
+    template = reference("reviewer-prompt.md").split("\n---\n", 1)[1]
+    missing = set(PLACEHOLDER.findall(template)) - values.keys()
+    if missing:
+        sys.exit(f"render-prompt: no value for {', '.join(sorted(missing))}")
+    prompt = PLACEHOLDER.sub(lambda m: values[m.group(1)], template).lstrip("\n")
+
+    out = Path(tempfile.mkdtemp(prefix="interrogate-")) / "prompt.md"
+    out.write_text(prompt)
+    print(out)
+
+
+if __name__ == "__main__":
+    main()
