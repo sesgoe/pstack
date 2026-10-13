@@ -46,17 +46,19 @@ A worktree doesn't contain a script that writes outside it (to another host, or 
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 
-1. In one background call (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits), create the reviewer's own worktree at the reviewed commit, render its prompt as below, print both paths, and run codex:
-   ```sh
-   wt=$(mktemp -d) && git worktree add --detach "$wt" <head> &&
-   p=$(<skill>/scripts/render-prompt <flags as below> --intent - <<'EOF'
-   <Step 2 paragraph>
-   EOF
-   ) && echo "worktree=$wt prompt=$p" &&
-   codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o "${p%/*}/out.md" - < "$p"
-   ```
-   `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything.
-2. Spawn the other reviewers in the same message. When the command exits, take both paths from its output. Shell variables don't survive between tool calls. Read `out.md` beside the prompt as that reviewer's result, then `git worktree remove --force <worktree>`.
+1. In one background call (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits), render the reviewer's prompt as below, create its own worktree at the reviewed commit, print both paths, and run codex. Copy the block without indentation: the heredoc's closing `EOF` must start its line.
+
+```sh
+p=$(<skill>/scripts/render-prompt <flags as below> --intent - <<'EOF'
+<Step 2 paragraph>
+EOF
+) && wt=$(mktemp -d) && echo "worktree=$wt prompt=$p" &&
+git worktree add --detach "$wt" <head> &&
+codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o "${p%/*}/out.md" - < "$p"
+```
+
+   `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. A failed render creates nothing; fix its input and run the block again.
+2. Spawn the other reviewers in the same message. When the command exits, take both paths from its output. Shell variables don't survive between tool calls. Read `out.md` beside the prompt as that reviewer's result, then `git worktree remove --force <worktree>`. To retry a failed codex run, rerun only the `codex exec` line with those paths.
 
 **After the verdict**, remove the Claude Code reviewers' worktrees too. `isolation: "worktree"` leaves each one, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. For each: `git worktree remove -f -f <path>` (a locked worktree needs both), then `git branch -D worktree-agent-<id>`. Then remove the directory of every prompt path `render-prompt` printed this round, by its literal path.
 
