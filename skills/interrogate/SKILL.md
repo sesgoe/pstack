@@ -46,11 +46,17 @@ A worktree doesn't contain a script that writes outside it (to another host, or 
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 
-1. Create the reviewer's own worktree at the reviewed commit: `wt=$(mktemp -d) && git worktree add --detach "$wt" <head>`.
-2. Render the reviewer's prompt into `$p` as below, then run in the background (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits):
-   `codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o "${p%/*}/out.md" - < "$p"`
+1. In one background call (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits), create the reviewer's own worktree at the reviewed commit, render its prompt as below, print both paths, and run codex:
+   ```sh
+   wt=$(mktemp -d) && git worktree add --detach "$wt" <head> &&
+   p=$(<skill>/scripts/render-prompt <flags as below> --intent - <<'EOF'
+   <Step 2 paragraph>
+   EOF
+   ) && echo "worktree=$wt prompt=$p" &&
+   codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o "${p%/*}/out.md" - < "$p"
+   ```
    `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything.
-3. Spawn the other reviewers in the same message. When the command exits, read `out.md` beside the prompt path `render-prompt` printed as that reviewer's result, then `git worktree remove --force <wt>` with the worktree's literal path. Shell variables don't survive between tool calls.
+2. Spawn the other reviewers in the same message. When the command exits, take both paths from its output. Shell variables don't survive between tool calls. Read `out.md` beside the prompt as that reviewer's result, then `git worktree remove --force <worktree>`.
 
 **After the verdict**, remove the Claude Code reviewers' worktrees too. `isolation: "worktree"` leaves each one, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. For each: `git worktree remove -f -f <path>` (a locked worktree needs both), then `git branch -D worktree-agent-<id>`. Then remove the directory of every prompt path `render-prompt` printed this round, by its literal path.
 
@@ -61,13 +67,12 @@ If your subagent tool rejects a configured entry, run that reviewer on its famil
 Render each reviewer's prompt with one call from anywhere in the reviewed repo, where `<skill>` is this skill's directory:
 
 ```sh
-p=$(<skill>/scripts/render-prompt --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
+<skill>/scripts/render-prompt --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
 <Step 2 paragraph>
 EOF
-)
 ```
 
-It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, given from the repo root, such as `flake.lock`; an exclude that matches no changed path is an error), and the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. Every subagent reviewer's whole prompt, in any harness, is `Read <path> in full and follow it.` A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, and `{RUNNER}` empty unless that reviewer is the runner.
+It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, given from the repo root, such as `flake.lock`; an exclude that matches no changed path is an error; exclude both sides of a rename, or its directory, since one side alone shows the other as a whole added or deleted file), and the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. Every subagent reviewer's whole prompt, in any harness, is `Read <path> in full and follow it.` A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, and `{RUNNER}` empty unless that reviewer is the runner.
 
 ## Step 4, Synthesize
 
