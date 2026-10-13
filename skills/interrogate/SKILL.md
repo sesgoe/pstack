@@ -15,6 +15,7 @@ Identify what to review from context:
 - If on a feature branch, run `git diff main...HEAD` (or the appropriate base branch) for the full changeset.
 - If the user's message references recent work, gather the relevant files.
 - A fix commit made in response to an earlier review is its own scope and gets its own review. Fixes create bugs.
+- Before `VERDICT: APPROVE` on a change that took more than one fix round, review the whole series against the base once more. Each round's scope sees only its own commit, never how the commits fit together.
 
 Reviewers are fresh subagents that did not write the code. The author's own pass over its work is a checklist pass, not a review.
 
@@ -40,6 +41,8 @@ Launch all reviewers in a single message with the Task tool, one per entry on th
 Each reviewer gets `subagent_type: generalPurpose` and `model` set to its configured entry, or its table default when there is no configured line. Omit `model` for an `auto` or `inherit-parent` entry, so that reviewer runs on the parent model.
 
 Every reviewer runs in its own git worktree, so it can't touch the author's tree. In Claude Code, pass `isolation: "worktree"`. That worktree starts at the remote's default branch, not the reviewed commit, and the prompt's first step checks out `{HEAD_SHA}`. A `codex:` entry gets its worktree from the steps below. In a harness with neither, create one per reviewer as in step 1 below and start the reviewer in it. Where your tool has a `readonly` flag, leave it off so reviewers can run code.
+
+A worktree doesn't contain a script that writes outside it (to another host, or to a path in the user's home or on a Windows drive). When the change has one, name one reviewer in its prompt as that script's runner; the others run its pieces.
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 

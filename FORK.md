@@ -21,6 +21,8 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     unsandboxed access, so a Claude-led review gets an OpenAI reviewer (2026-10-08);
   - every reviewer runs in its own git worktree (Claude Code `isolation: "worktree"`) and first
     checks out the reviewed SHA, because that worktree starts at the remote's default branch (2026-10-08).
+  - a fix-round series gets one last whole-series review before APPROVE, and a script that writes
+    outside the worktree runs end to end in one named reviewer only (2026-10-13).
   - from a retro on a 19-round review loop (2026-10-13): the intent paragraph names the threat
     model, and a bypass that needs a client outside it is Noted; a second finding of one class in
     one unit brings a table or harness test into Act On; a "Shared Machine" section in
@@ -41,7 +43,7 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
 - `skills/pr-mode` (ours, 2026-10-10): the user's entry point for PR work. It runs `poteto-mode`
   and adds local triggers (`verify-this` for Verification claims, a recommended
   `thermo-nuclear-code-quality-review` on one-way doors, a stop-and-ask when the `interrogate`
-  loop stops converging, 2026-10-13). New workflow triggers go there, not
+  loop stops converging, and later-step findings going to the issue, 2026-10-13). New workflow triggers go there, not
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
 

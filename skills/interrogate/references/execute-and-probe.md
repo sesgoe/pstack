@@ -19,6 +19,7 @@ You run on the author's machine with full access, beside the author's live proce
 - Run network and process probes inside `unshare -rnm --pid --fork --mount-proc`, so they get their own network and PID namespace.
 - Signal only PIDs you started, by number. `pkill`, `killall`, and kill-by-pattern reach the author's processes.
 - Leave the author's ports, state directories, devices (adb, emulators), and real backends as you found them; start your own copies on free ports.
+- A script that writes outside your worktree (another host, the user's home, a Windows drive): run it end to end only when the prompt names you its runner. Otherwise run its pieces, with every output path pointed into your own `mktemp -d`.
 
 ## What to Probe
 
