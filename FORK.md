@@ -65,7 +65,8 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   `thermo-nuclear-code-quality-review` on one-way doors, a stop-and-ask when the `interrogate`
   loop stops converging, and later-step findings going to the issue, 2026-10-13; the stop also counts
   rounds of mostly fallout or out-of-threat-model findings and a growing do-not-re-report list, and
-  forecasts the next round's yield, 2026-10-13). New workflow triggers go there, not
+  forecasts the next round's yield, 2026-10-13; Consider items are listed and offered as a follow-up
+  issue before the hand-off closes the source issue, 2026-10-15). New workflow triggers go there, not
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
 
