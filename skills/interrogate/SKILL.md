@@ -40,7 +40,7 @@ Launch all reviewers in a single message with the Task tool, one per entry on th
 
 Each reviewer gets `subagent_type: generalPurpose` and `model` set to its configured entry, or its table default when there is no configured line. Omit `model` for an `auto` or `inherit-parent` entry, so that reviewer runs on the parent model.
 
-Every reviewer runs in its own git worktree, so it can't touch the author's tree. In Claude Code, pass `isolation: "worktree"`. That worktree starts at the remote's default branch, not the reviewed commit, and the prompt's first step checks out `{HEAD_SHA}`. A `codex:` entry gets its worktree from the steps below. In a harness with neither, create one per reviewer (`wt=$(mktemp -d) && git worktree add --detach "$wt" <head>`) and start the reviewer in it. Where your tool has a `readonly` flag, leave it off so reviewers can run code.
+Every reviewer runs in its own git worktree, so it can't touch the author's tree. In Claude Code, pass `isolation: "worktree"`. That worktree starts at the remote's default branch, not the reviewed commit, and the prompt's first step checks out `{HEAD_SHA}`. A `codex:` entry gets its worktree from the steps below. When the reviewed repo isn't your session's repo, `isolation: "worktree"` would cut the worktree from the wrong repo. In that case, or in a harness with neither, create one per reviewer beside its prompt, from the reviewed repo (`git worktree add --detach <prompt dir>/wt <full sha>`), and start the reviewer in it. Where your tool has a `readonly` flag, leave it off so reviewers can run code.
 
 A worktree doesn't contain a script that writes outside it (to another host, or to a path in the user's home or on a Windows drive). When the change has one, render one reviewer's prompt with `--runner <script>` to name it that script's runner; the others run its pieces.
 
@@ -65,10 +65,11 @@ It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the
    `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The script renders the prompt, prints `prompt=<path> out=<path>`, runs `codex exec` in a worktree at `<head>` beside the prompt, and removes that worktree when codex exits. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. A failed render creates nothing; fix its input and run the call again.
 2. Spawn the other reviewers in the same message. When the command exits, read the printed `out=` file as that reviewer's result. To retry a failed codex run, run the same call again.
 
-**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout, with every agent id and the directory of every prompt path printed this round:
+**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout of the reviewed repo, with every agent id and the directory of every prompt path printed this round (skip the first line when no reviewer used `isolation: "worktree"`):
 
 ```sh
-for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$id && git branch -D worktree-agent-$id; done; rm -rf <prompt dir>...
+for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$id && git branch -D worktree-agent-$id; done
+for d in <prompt dir>...; do [ ! -d "$d/wt" ] || git worktree remove -f -f "$d/wt"; rm -rf "$d"; done
 ```
 
 If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.

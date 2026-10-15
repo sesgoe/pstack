@@ -45,6 +45,8 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     `codex exec` in a worktree beside it, and removes that worktree when codex exits. It replaced
     a multi-line SKILL.md block whose bugs took three review rounds. Round cleanup is a one-line loop
     in SKILL.md; a `cleanup-round` helper waits until that line gets mistyped.
+  - when the reviewed repo isn't the session's repo, a Claude reviewer's worktree is made by hand
+    at `<prompt dir>/wt`, so one cleanup loop over prompt dirs covers it and codex's (2026-10-15).
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook
