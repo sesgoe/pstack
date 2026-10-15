@@ -59,6 +59,8 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     skipped. Blast Radius keeps only who and what the change touches.
   - `playbooks/authoring-a-skill.md` step 2 runs every changed shell block as written, under
     bash and zsh, success and failure (2026-10-13).
+  - its step 1 loads the user's `writing-for-agents` skill when it is installed, before the
+    harness's skill-authoring skill (2026-10-15).
 
 - `skills/pr-mode` (ours, 2026-10-10): the user's entry point for PR work. It runs `poteto-mode`
   and adds local triggers (`verify-this` for Verification claims, a recommended
