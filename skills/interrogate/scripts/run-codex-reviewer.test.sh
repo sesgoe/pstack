@@ -76,12 +76,12 @@ check "the heredoc intent reaches the prompt literally" '> Para `one` $HOME.' "$
 CODEX_HANG=1 "$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent x >/dev/null 2>&1 &
 launcher=$!
 for _ in $(seq 50); do [ -s "$scratch/hung" ] && break; sleep 0.1; done
-kill -TERM "$launcher"
+kill -TERM "$launcher" 2>/dev/null || true
 for _ in $(seq 20); do kill -0 "$launcher" 2>/dev/null || break; sleep 0.1; done
+if wait "$launcher"; then status=0; else status=$?; fi
 alive() { kill -0 "$1" 2>/dev/null && echo alive || echo gone; }
-check "SIGTERM stops codex and removes the worktree" "gone gone 1" \
-  "$(alive "$launcher") $(alive "$(cat "$scratch/hung")") $(worktrees)"
-wait "$launcher" 2>/dev/null || true
+check "SIGTERM stops a running codex, exits 130, and removes the worktree" "codex ran, 130 gone 1" \
+  "$([ -s "$scratch/hung" ] && echo "codex ran," || echo "codex never ran,") $status $(alive "$(cat "$scratch/hung")") $(worktrees)"
 
 rm -rf "$scratch/args" "$scratch"/tmp/*
 check "a failed render fails before any worktree or codex run" "render-prompt: --exclude nosuch: matches no changed path" \
@@ -89,6 +89,8 @@ check "a failed render fails before any worktree or codex run" "render-prompt: -
 check "  and leaves nothing behind" "1 0 no codex" \
   "$(worktrees) $(find "$scratch/tmp" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ') $([ -e "$scratch/args" ] && echo codex || echo no codex)"
 
+check "a bad --head names it" "run-codex-reviewer: --head nosuch: not a commit" \
+  "$("$run" --model m1 --effort high --head nosuch --base HEAD~1 --intent x 2>&1 || true)"
 check "--model is required" "run-codex-reviewer: --model, --effort, and --head <sha> are required" \
   "$("$run" --effort high --head HEAD --base HEAD~1 --intent x 2>&1 || true)"
 check "--head=<sha> is not taken for --head" "run-codex-reviewer: --model, --effort, and --head <sha> are required" \

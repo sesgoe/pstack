@@ -19,8 +19,8 @@ if [ -z "$model" ] || [ -z "$effort" ] || [ -z "$head" ]; then
   exit 2
 fi
 
-head=$(git rev-parse --verify "$head^{commit}")
-p=$("$(dirname "$0")/render-prompt" --head "$head" "${flags[@]}")
+sha=$(git rev-parse --verify -q "$head^{commit}") || { echo "run-codex-reviewer: --head $head: not a commit" >&2; exit 2; }
+p=$("$(dirname "$0")/render-prompt" --head "$sha" "${flags[@]}")
 dir=${p%/*}
 wt=$dir/wt
 echo "prompt=$p out=$dir/out.md"
@@ -28,7 +28,7 @@ echo "prompt=$p out=$dir/out.md"
 pid=""
 trap 'git worktree remove -f -f "$wt" || true' EXIT
 trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; wait; exit 130' INT TERM HUP
-git worktree add -q --detach "$wt" "$head"
+git worktree add -q --detach "$wt" "$sha"
 codex exec -m "$model" -c "model_reasoning_effort=$effort" --dangerously-bypass-approvals-and-sandbox \
   -C "$wt" -o "$dir/out.md" - < "$p" &
 pid=$!
