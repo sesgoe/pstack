@@ -40,6 +40,11 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     inside the threat model; fix rounds review their fix commit and the whole series once, as the
     final gate; reviewers' scratch goes under their own `mktemp -d` with `TMPDIR`; a comparison
     counts only when both sides ran.
+  - `scripts/run-codex-reviewer` (2026-10-15, agent-config #5): one call starts a `codex:` reviewer.
+    It takes render-prompt's flags plus `--model` and `--effort`, renders the prompt, runs
+    `codex exec` in a worktree beside it, and removes that worktree when codex exits. It replaced
+    a multi-line SKILL.md block whose bugs took three review rounds. Round cleanup is a one-line loop
+    in SKILL.md; a `cleanup-round` helper waits until that line gets mistyped.
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook
@@ -76,7 +81,7 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   covers text for an agent's context (AGENTS.md lines, skill descriptions). `retro` loads it.
 
 - `AGENTS.md`, `scripts/check.sh`, and `.github/workflows/check.yml` (ours, 2026-10-13): the check
-  runs every `skills/*/scripts/*.test.sh`, starting with `render-prompt.test.sh`.
+  runs every `skills/*/scripts/*.test.sh`, such as `render-prompt.test.sh`.
 
 ## Syncing with upstream
 

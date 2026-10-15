@@ -56,21 +56,20 @@ It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 
-1. In one background call (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits), render the reviewer's prompt as above, create its own worktree at the reviewed commit beside the prompt, print both paths, and run codex. Copy the block without indentation: the heredoc's closing `EOF` must start its line.
+1. In one background call (in Claude Code, `Bash` with `run_in_background`; you are notified when it exits), run `run-codex-reviewer` with the `render-prompt` flags and `--intent` heredoc from above:
 
 ```sh
-p=$(<skill>/scripts/render-prompt <flags as above> --intent - <<'EOF'
-<Step 2 paragraph>
-EOF
-) && wt="${p%/*}/wt" && echo "worktree=$wt prompt=$p" &&
-git worktree add --detach "$wt" <head> &&
-codex exec -m <model> -c model_reasoning_effort=<effort> --dangerously-bypass-approvals-and-sandbox -C "$wt" -o "${p%/*}/out.md" - < "$p"
+<skill>/scripts/run-codex-reviewer --model <model> --effort <effort> <render-prompt flags>
 ```
 
-   `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. A failed render creates nothing; fix its input and run the block again.
-2. Spawn the other reviewers in the same message. When the command exits, take both paths from its output. Shell variables don't survive between tool calls. Read `out.md` beside the prompt as that reviewer's result, then `git worktree remove --force <worktree>`. The prompt directory holds both, so the cleanup below removes anything a failed `git worktree add` left. To retry a failed codex run, rerun only the `codex exec` line with those paths.
+   `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The script renders the prompt, prints `prompt=<path> out=<path>`, runs `codex exec` in a worktree at `<head>` beside the prompt, and removes that worktree when codex exits. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. A failed render creates nothing; fix its input and run the call again.
+2. Spawn the other reviewers in the same message. When the command exits, read the printed `out=` file as that reviewer's result. To retry a failed codex run, run the same call again.
 
-**After the verdict**, remove the Claude Code reviewers' worktrees too. `isolation: "worktree"` leaves each one, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. For each: `git worktree remove -f -f <path>` (a locked worktree needs both), then `git branch -D worktree-agent-<id>`. Then remove the directory of every prompt path `render-prompt` printed this round, by its literal path.
+**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout, with every agent id and every prompt directory printed this round:
+
+```sh
+for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$id && git branch -D worktree-agent-$id; done; rm -rf <prompt dir>...
+```
 
 If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.
 

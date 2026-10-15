@@ -8,3 +8,4 @@ A fork of pstack. `FORK.md` lists every local edit and the upstream sync steps; 
 | Rule | Enforced by |
 |---|---|
 | `render-prompt` renders the whole diff from any cwd, takes excludes literally (non-ASCII, `./`, both rename sides), and ignores diff config | `skills/interrogate/scripts/render-prompt.test.sh`, via `scripts/check.sh` and CI |
+| `run-codex-reviewer` renders before it creates the worktree, hands codex the prompt, model, and effort, and removes the worktree when codex exits or fails | `skills/interrogate/scripts/run-codex-reviewer.test.sh`, via `scripts/check.sh` and CI |
