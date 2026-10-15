@@ -81,7 +81,8 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   covers text for an agent's context (AGENTS.md lines, skill descriptions). `retro` loads it.
 
 - `AGENTS.md`, `scripts/check.sh`, and `.github/workflows/check.yml` (ours, 2026-10-13): the check
-  runs every `skills/*/scripts/*.test.sh`, such as `render-prompt.test.sh`.
+  runs every `skills/*/scripts/*.test.sh`, such as `render-prompt.test.sh`. Since 2026-10-15 the tests
+  source `scripts/test-lib.sh` (a FAIL line when a test aborts), and the check also runs shellcheck.
 
 ## Syncing with upstream
 

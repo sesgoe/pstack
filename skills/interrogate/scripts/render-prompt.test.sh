@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Behaviour test for render-prompt. Run directly or through scripts/check.sh.
 # RENDER_PROMPT=<path> runs it against another copy, e.g. an older commit's script.
-set -euo pipefail
+# shellcheck source=scripts/test-lib.sh
+source "$(dirname "$0")/../../../scripts/test-lib.sh"
 
 render_prompt=${RENDER_PROMPT:-$(cd "$(dirname "$0")" && pwd)/render-prompt}
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 export TMPDIR=$scratch GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
-failures=0
 
 repo=$scratch/repo
 git init -q "$repo"
@@ -30,17 +30,6 @@ cd sub
 
 render() { "$render_prompt" --head HEAD --base HEAD~1 "$@"; }
 diff_files() { grep '^diff --git' "$1" | sort; }
-
-check() {
-  local name=$1 expected=$2 actual=$3
-  if [ "$expected" = "$actual" ]; then
-    echo "ok   $name"
-  else
-    echo "FAIL $name"
-    diff <(echo "$expected") <(echo "$actual") | sed 's/^/     /' || true
-    failures=$((failures + 1))
-  fi
-}
 
 all_files='diff --git a/a/x b/a/y
 diff --git a/app/[id]/page.txt b/app/[id]/page.txt
@@ -100,8 +89,4 @@ check "a typo'd --exclude fails" "render-prompt: --exclude nosuch.lock: matches 
   "$(render --intent x --exclude nosuch.lock 2>&1 || true)"
 check "an empty intent fails" "render-prompt: empty intent" "$(render --intent - </dev/null 2>&1 || true)"
 
-if [ "$failures" -gt 0 ]; then
-  echo "render-prompt.test.sh: $failures failed"
-  exit 1
-fi
-echo "render-prompt.test.sh: ok"
+finish

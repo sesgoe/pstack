@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Behaviour test for run-codex-reviewer, with codex stubbed. Run directly or through scripts/check.sh.
-set -euo pipefail
+# shellcheck source=scripts/test-lib.sh
+source "$(dirname "$0")/../../../scripts/test-lib.sh"
 
 run=$(cd "$(dirname "$0")" && pwd)/run-codex-reviewer
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
-failures=0
 
 mkdir "$scratch/bin" "$scratch/tmp"
 cat > "$scratch/bin/codex" <<'EOF'
@@ -33,16 +33,6 @@ cd "$repo"
 echo a > f.txt && git add -A && git commit -q -m base
 echo b > f.txt && git commit -q -am head
 
-check() {
-  local name=$1 expected=$2 actual=$3
-  if [ "$expected" = "$actual" ]; then
-    echo "ok   $name"
-  else
-    echo "FAIL $name"
-    diff <(echo "$expected") <(echo "$actual") | sed 's/^/     /' || true
-    failures=$((failures + 1))
-  fi
-}
 worktrees() { git worktree list | wc -l | tr -d ' '; }
 
 out=$("$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent - 2>&1 <<'EOF'
@@ -96,8 +86,4 @@ check "--model is required" "run-codex-reviewer: --model, --effort, and --head <
 check "--head=<sha> is not taken for --head" "run-codex-reviewer: --model, --effort, and --head <sha> are required" \
   "$("$run" --model m1 --effort high --head=HEAD --base HEAD~1 --intent x 2>&1 || true)"
 
-if [ "$failures" -gt 0 ]; then
-  echo "run-codex-reviewer.test.sh: $failures failed"
-  exit 1
-fi
-echo "run-codex-reviewer.test.sh: ok"
+finish

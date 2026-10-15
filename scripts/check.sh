@@ -4,7 +4,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 status=0
 for test in skills/*/scripts/*.test.sh; do
-  bash "$test" || status=1
+  bash "$test" || { echo "FAIL $test: exited $?"; status=1; }
 done
 [ "$status" = 0 ] && echo "check.sh: ok"
 exit "$status"
