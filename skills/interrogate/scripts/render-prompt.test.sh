@@ -82,6 +82,7 @@ p=$(printf 'Para {HEAD_SHA} one.\n\nPara two.\n' | render --runner deploy.sh --i
 check "the intent is quoted line by line and kept literal" '> Para {HEAD_SHA} one.
 >
 > Para two.' "$(sed -n '/stated intent/,/^Review whether/p' "$p" | grep '^>')"
+# shellcheck disable=SC2016
 check "--runner adds the runner sentence" 'The prompt names you the runner of `deploy.sh`, so run it end to end.' \
   "$(grep -o 'The prompt names you the runner of .*' "$p")"
 
