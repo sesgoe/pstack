@@ -65,7 +65,7 @@ It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the
    `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The script renders the prompt, prints `prompt=<path> out=<path>`, runs `codex exec` in a worktree at `<head>` beside the prompt, and removes that worktree when codex exits. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. A failed render creates nothing; fix its input and run the call again.
 2. Spawn the other reviewers in the same message. When the command exits, read the printed `out=` file as that reviewer's result. To retry a failed codex run, run the same call again.
 
-**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout, with every agent id and every prompt directory printed this round:
+**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout, with every agent id and the directory of every prompt path printed this round:
 
 ```sh
 for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$id && git branch -D worktree-agent-$id; done; rm -rf <prompt dir>...
