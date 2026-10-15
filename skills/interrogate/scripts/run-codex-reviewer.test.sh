@@ -21,6 +21,7 @@ while [ $# -gt 0 ]; do
     *) shift ;;
   esac
 done
+if [ -n "${CODEX_HANG:-}" ]; then echo $$ > "$CODEX_LOG/hung"; exec sleep 30; fi
 exit "${CODEX_EXIT:-0}"
 EOF
 chmod +x "$scratch/bin/codex"
@@ -44,7 +45,10 @@ check() {
 }
 worktrees() { git worktree list | wc -l | tr -d ' '; }
 
-out=$("$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent x 2>&1) || true
+out=$("$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent - 2>&1 <<'EOF'
+Para `one` $HOME.
+EOF
+) || true
 dir=$(sed -n 's/^prompt=\(.*\)\/prompt.md out=.*/\1/p' <<<"$out")
 check "it prints the prompt and out paths" "prompt=$dir/prompt.md out=$dir/out.md" "$out"
 check "codex gets the model, effort, worktree, and out path" "exec
@@ -65,6 +69,19 @@ check "the worktree is removed after codex exits" "1 absent" "$(worktrees) $([ -
 
 if CODEX_EXIT=3 "$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent x >/dev/null 2>&1; then status=0; else status=$?; fi
 check "a failed codex run exits with its status and removes the worktree" "3 1" "$status $(worktrees)"
+
+# shellcheck disable=SC2016
+check "the heredoc intent reaches the prompt literally" '> Para `one` $HOME.' "$(grep -F '> Para' "$dir/prompt.md")"
+
+CODEX_HANG=1 "$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent x >/dev/null 2>&1 &
+launcher=$!
+for _ in $(seq 50); do [ -s "$scratch/hung" ] && break; sleep 0.1; done
+kill -TERM "$launcher"
+for _ in $(seq 20); do kill -0 "$launcher" 2>/dev/null || break; sleep 0.1; done
+alive() { kill -0 "$1" 2>/dev/null && echo alive || echo gone; }
+check "SIGTERM stops codex and removes the worktree" "gone gone 1" \
+  "$(alive "$launcher") $(alive "$(cat "$scratch/hung")") $(worktrees)"
+wait "$launcher" 2>/dev/null || true
 
 rm -rf "$scratch/args" "$scratch"/tmp/*
 check "a failed render fails before any worktree or codex run" "render-prompt: --exclude nosuch: matches no changed path" \

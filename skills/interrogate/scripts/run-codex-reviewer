@@ -10,7 +10,7 @@ while [ $# -gt 0 ]; do
   case $1 in
     --model) model=${2:?}; shift 2 ;;
     --effort) effort=${2:?}; shift 2 ;;
-    --head) head=${2:?}; flags+=("$1" "$2"); shift 2 ;;
+    --head) head=${2:?}; shift 2 ;;
     *) flags+=("$1"); shift ;;
   esac
 done
@@ -19,13 +19,17 @@ if [ -z "$model" ] || [ -z "$effort" ] || [ -z "$head" ]; then
   exit 2
 fi
 
-p=$("$(dirname "$0")/render-prompt" "${flags[@]}")
+head=$(git rev-parse --verify "$head^{commit}")
+p=$("$(dirname "$0")/render-prompt" --head "$head" "${flags[@]}")
 dir=${p%/*}
 wt=$dir/wt
 echo "prompt=$p out=$dir/out.md"
 
-trap 'git worktree remove --force "$wt" 2>/dev/null || true' EXIT
-trap 'exit 130' INT TERM HUP
+pid=""
+trap 'git worktree remove -f -f "$wt" || true' EXIT
+trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; wait; exit 130' INT TERM HUP
 git worktree add -q --detach "$wt" "$head"
 codex exec -m "$model" -c "model_reasoning_effort=$effort" --dangerously-bypass-approvals-and-sandbox \
-  -C "$wt" -o "$dir/out.md" - < "$p"
+  -C "$wt" -o "$dir/out.md" - < "$p" &
+pid=$!
+wait "$pid"
