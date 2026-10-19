@@ -47,6 +47,11 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     in SKILL.md; a `cleanup-round` helper waits until that line gets mistyped.
   - when the reviewed repo isn't the session's repo, a Claude reviewer's worktree is made by hand
     at `<prompt dir>/wt`, so one cleanup loop over prompt dirs covers it and codex's (2026-10-15).
+  - in T3, every reviewer runs as a `delegate_task` child task, so the panel shows in T3 with
+    transcripts and `task_cancel` (2026-10-19, fleet #45, SES-74). A trial on fleet `2bc43e2` showed
+    the Codex child matches `codex exec` on wall time (1m08s vs 1m10s) and output, and returns an
+    8 KB result whole in `summary`. Children don't show in the sidebar, but archiving one keeps its
+    worktree and branch, hence the per-child cleanup line. Outside T3, nothing changes.
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook

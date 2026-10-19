@@ -65,12 +65,22 @@ It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the
    `<effort>` is the effort in the settings file's `# budget` line (for example `high`), or `high` without one. The script renders the prompt, prints `prompt=<path> out=<path>`, runs `codex exec` in a worktree at `<head>` beside the prompt, and removes that worktree when codex exits. The reviewer has full, unsandboxed access, including the network, so it can install and run anything. A failed render creates nothing; fix its input and run the call again.
 2. Spawn the other reviewers in the same message. When the command exits, read the printed `out=` file as that reviewer's result. To retry a failed codex run, run the same call again.
 
+**In T3** (the `delegate_task` tool from the `t3-code` MCP server is present), every reviewer, `codex:` entries included, runs as a T3 child task instead, so the user can see the panel in T3, read each transcript, and cancel a reviewer with `task_cancel`. Call `orchestrator_capabilities` once for the provider and model ids. Render every prompt with `render-prompt` (no `run-codex-reviewer`), then send one `delegate_task` per reviewer in one message:
+
+- `target`: a `codex:<model>` entry is provider `codex`, model `<model>`, option `reasoningEffort` set to the budget-line effort (or `high`). Any other entry is the provider and model id from `orchestrator_capabilities` that matches it (an alias like `opus` is that family's newest id), with its effort suffix (`-xhigh`) as the `effort` option. Omit `model` for an `auto` or `inherit-parent` entry.
+- `isolation: "worktree"`, `role: "review"`, `mode: "async"`, and a `title` and `clientRequestId` naming the round and the reviewer (`round 2, Reviewer B`). T3 can name the child's branch after its title (one trial child got `ses/review-task`), so keep titles distinct.
+- `task`: `Read <path> in full and follow it.` The child's worktree is cut from your thread's local commit and the prompt checks out `{HEAD_SHA}`. When the reviewed repo isn't your thread's repo, create the reviewer's worktree beside its prompt as above and start the task with `Work only in <prompt dir>/wt: cd there first.`
+
+Each child wakes your thread when it finishes; its `task_status` `summary` is that reviewer's result. To retry a failed reviewer, send a new `delegate_task` with a new `clientRequestId`. If `delegate_task` rejects a reviewer (its provider is disabled), run that reviewer the non-T3 way above and say so under **Reviewers**. Child threads don't show in the sidebar, but archiving one leaves its worktree and branch in place, so the cleanup below covers them.
+
 **After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout of the reviewed repo, with every agent id and the directory of every prompt path printed this round (skip the first line when no reviewer used `isolation: "worktree"`):
 
 ```sh
 for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$id && git branch -D worktree-agent-$id; done
 for d in <prompt dir>...; do [ ! -d "$d/wt" ] || git worktree remove -f -f "$d/wt"; rm -rf "$d"; done
 ```
+
+For each T3 child task, read its `worktreePath` and `branch` with `t3_thread_read` on its `childThreadId`, archive it (`t3_thread_organize` `archive`), then from the main checkout run `git worktree remove -f -f <worktreePath> && git branch -D <branch>`.
 
 If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.
 
