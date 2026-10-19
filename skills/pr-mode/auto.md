@@ -92,6 +92,8 @@ A step that says "is a stop", and any of these at any point, posts `stopped` wit
 
 ## Autonomy log
 
-For each log entry in the **Stages** table, and at `ship`'s merge and deploy, add one line to the Linear document "Autonomy log" (project "Agent workflow automation", https://linear.app/sesgoe/document/autonomy-log-ab5d486f11a7) with `save_document` `patch` `insert_after` anchored on `## Log`, so the service's and other workers' lines survive, then read it back to check your line is there. Take the time in UTC from `date -u '+%F %R'`:
+For each log entry in the **Stages** table, and at `ship`'s merge and deploy, append one line to `log.md` in `sesgoe/autonomy-log` (its README has the format) with that repo's script. It writes the line once per id and keeps the service's and other workers' lines:
 
-`* YYYY-MM-DD HH:MM UTC: [SES-<n>](<issue url>) <stopped | merged | deployed | opened for review | dropped>: <why or what, one line>`
+`python3 ~/code/sesgoe/autonomy-log/scripts/append.py --id 'w:SES-<n>/<event>/<UTC minute>' '[SES-<n>](<issue url>) · <event> · <why or what, one line>'`
+
+`<event>` is `stopped`, `merged`, `deployed`, `opened for review` or `dropped`; take `<UTC minute>` from `date -u '+%FT%R'` once and reuse it if you rerun. The script prints `logged` or `already logged`; on an error, rerun it with the same id. Keep the text to one line without `-->`, and backslash-escape `[ ] < >` in text copied from an issue or title.
