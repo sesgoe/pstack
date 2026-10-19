@@ -24,13 +24,13 @@ Say "plan stop" and "`open-pr`" to the user, never level numbers.
 
 A worker always works on its own branch and PR, in every repo: the standing go-ahead to push `main` and the no-PR rule for personal repos don't apply to it. It never pushes `main` and never force-pushes; a branch that needs a rebase after it was pushed is a stop.
 
-**Client repos** keep everything on the machine until the user's `ship`: commit locally, push nothing, open nothing. A repo is a client repo unless `git remote get-url origin` names owner `sesgoe` and the main checkout (`git rev-parse --path-format=absolute --git-common-dir`) sits under `~/code/sesgoe`. Decide it once, at the start, and keep it.
+**Client repos** keep everything on the machine until the user's `ship`: commit locally, push nothing, open nothing. A repo is a client repo unless `git remote get-url origin` names owner `sesgoe` and the main checkout (`git rev-parse --path-format=absolute --git-common-dir`) sits under `~/code/sesgoe`. Decide it once, at the start, and keep it. When either command fails (a jj workspace has no `.git`), stop and ask.
 
 Otherwise, at `L2` and in each `changes:` round, push the branch; the first push opens the PR and links it to the thread and the Linear issue.
 
 ## Entries
 
-- **start**: the issue's `T3 thread:` line, written by the service, names this thread; the title already reads `(auto) SES-<n>: …`. Before your first edit to the description, re-read the issue until that line names this thread.
+- **start**: use the issue named in `Issue:`; the title already reads `(auto) SES-<n>: …`. The service writes the issue's `T3 thread:` line just after the launch: before your first edit to the description, re-read the issue until that line names this thread, for up to two minutes, then stop. Add the description's other thread lines from the global `AGENTS.md` if they're missing.
 - **adopt**: re-read the issue and all its comments, then post the card with where the work stands: what's done, pushed, or merged before adoption stays done and goes in the card. Carry on at the given level: at `L1`, stop with a plan for what's left; at `L2`, continue to the hand-off.
 - **pause**: stop at the next **safe point**: the current step finished down to a commit. Stop a `ship` that hasn't merged; finish one that has, through its deploy and confirmation. Then post the card with where the work stands and set `Needs me`; if the thread was already waiting at `Needs me`, post one line saying it's paused. A `ship`, `changes:` or `drop:` the user sends after the pause runs in full. Answer any other comment, and resume work only on an adopt message.
 
@@ -43,27 +43,29 @@ An `(auto)` hand-off replaces `opening-a-pr`'s go-ahead ask. Post pr-mode's card
 - **Risk:** Low, Medium or High, and why in one line (what runs it, what it can break). pr-mode's `thermo-nuclear-code-quality-review` recommendation goes here.
 - **Look at:** 1 to 3 `file:line` spots, each with why.
 - **Diff:** `+a −b in n files`, then a line per file. In a client repo, add the local branch name; the patch itself stays off Linear.
-- **Checks:** each command run and its result, and the PR's checks.
-- **Review:** the `interrogate` verdict, its rounds, what the last round found, and the approved base and head SHAs.
+- **Checks:** each command run and its result.
+- **Review:** the `interrogate` verdict, its rounds, what the last round found, and the approved head SHA and base-to-head `git patch-id --stable`.
 - **Verified:** the `verify-this` claims.
 - **Not done / guessed:** what's left out, and each guess labelled as one.
 - **Reply with:** `ship` · `changes: …` · `drop: <reason>`
 
-A plan stop posts the card, State `needs your call on the plan`, then the plan and **Reply with:** `go` · `changes: …` (corrections to the plan) · `drop: <reason>`. When the project's tally shows at least 3 `Shipped as-is` and no `Dropped`, add "`open-pr` looks safe for this project" with the tally; promotion is the user's call.
+A plan stop posts the card, State `needs your call on the plan`, then the plan and **Reply with:** `go` · `changes: …` · `drop: <reason>`. When the project's tally shows at least 3 `Shipped as-is` and no `Dropped`, add "`open-pr` looks safe for this project" with the tally; promotion is the user's call.
 
 ## Replies
 
 The user's replies arrive as messages routed from Linear comments; answer each in its comment thread, as the global `AGENTS.md` says. A reply word that doesn't fit the stage (`ship` before a `ready to ship` hand-off) gets an answer saying where the work stands, and nothing else.
 
+**At a plan stop**, `go` carries the thread on as `L2`, and `changes: …` revises the plan and posts the plan stop again: no build, no publish.
+
 **`ship`.** This replaces poteto-mode's Shipping playbook for the thread.
-1. Check the PR still has the approved base and head SHAs from **Review**, is mergeable, and its checks pass. A moved head or base means `interrogate` again and a new hand-off; a conflict or a red check is a stop.
-2. Merge with the method the repo allows (`gh repo view --json squashMergeAllowed,mergeCommitAllowed,rebaseMergeAllowed`; squash when allowed), bound to the approved head: `gh pr merge <n> --squash --match-head-commit <sha>`.
+1. Check the approval still describes the patch, as `shipping.md` step 3 does, against the head SHA and patch-id on **Review**. A changed patch means `interrogate` again and a new hand-off. Wait for pending PR checks; a red check or a conflict is a stop.
+2. Merge bound to the approved head: `gh pr merge <n> --squash --match-head-commit <sha>`, or the method `gh repo view --json squashMergeAllowed,mergeCommitAllowed,rebaseMergeAllowed` allows when squash is off.
 3. Watch CI on the merge commit, as the global `AGENTS.md` says.
 4. Deploy: the step the repo's `AGENTS.md` or README names (fleet: `scripts/update.sh`, or the sync script the change belongs to). fleet's **Safe changes** (`AGENTS.md`) still stop it: a change that can cut off a box needs the user's go and an armed undo. A repo with no deploy step: say so in the card.
 5. Confirm it took: the deployed copy runs the merge commit, or the changed behaviour shows on the real system.
-6. Set the `Verdict` label, set the issue `Done`, and post the card with State `shipped`. `Shipped as-is` only when the user asked for no change to the work after a hand-off, in any channel; when unsure, `Shipped after changes`.
+6. Set the `Verdict` label, set the issue `Done`, and post the card with State `shipped`. `Shipped as-is` only when the user asked for no change to the work after its first `ready to ship` hand-off, in any channel; when unsure, `Shipped after changes`.
 
-In a client repo, `ship` instead checks the local head is the approved one, rebases it onto a fresh fetch of trunk, pushes, opens the PR ready for review, and requests reviewers the way the repo's recent PRs did (`CODEOWNERS` first). Never merge or deploy there. Set the `Verdict` label and `Waiting`.
+In a client repo, `ship` instead checks the local head is the approved one, pushes it unchanged, opens the PR ready for review, and requests reviewers the way the repo's recent PRs did (`CODEOWNERS` first). Never merge or deploy there. Set the `Verdict` label and `Waiting`.
 
 **`changes: …`.** Another round on the same branch: make the change, rerun the checks and `interrogate`, publish, and hand off again opening with **Since the last hand-off**.
 
@@ -80,6 +82,6 @@ Stop at `Needs me` with the card and one question when the work hits:
 
 ## Autonomy log
 
-At every stop, merge, deploy and drop, add one line to the Linear document "Autonomy log" (project "Agent workflow automation", https://linear.app/sesgoe/document/autonomy-log-ab5d486f11a7) with `save_document` `patch` `insert_after` anchored on `## Log`, so the service's and other workers' lines survive, then read it back to check your line is there:
+At every stop, merge, deploy and drop, add one line to the Linear document "Autonomy log" (project "Agent workflow automation", https://linear.app/sesgoe/document/autonomy-log-ab5d486f11a7) with `save_document` `patch` `insert_after` anchored on `## Log`, so the service's and other workers' lines survive, then read it back to check your line is there. Take the time from `TZ=America/New_York date '+%F %R'`:
 
 `* YYYY-MM-DD HH:MM ET: [SES-<n>](<issue url>) <stopped | merged | deployed | opened for review | dropped>: <why or what, one line>`
