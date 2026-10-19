@@ -92,6 +92,6 @@ A step that says "is a stop", and any of these at any point, posts `stopped` wit
 
 ## Autonomy log
 
-For each log entry in the **Stages** table, and at `ship`'s merge and deploy, add one line to the Linear document "Autonomy log" (project "Agent workflow automation", https://linear.app/sesgoe/document/autonomy-log-ab5d486f11a7) with `save_document` `patch` `insert_after` anchored on `## Log`, so the service's and other workers' lines survive, then read it back to check your line is there. Take the time from `TZ=America/New_York date '+%F %R'`:
+For each log entry in the **Stages** table, and at `ship`'s merge and deploy, add one line to the Linear document "Autonomy log" (project "Agent workflow automation", https://linear.app/sesgoe/document/autonomy-log-ab5d486f11a7) with `save_document` `patch` `insert_after` anchored on `## Log`, so the service's and other workers' lines survive, then read it back to check your line is there. Take the time in UTC from `date -u '+%F %R'`:
 
-`* YYYY-MM-DD HH:MM ET: [SES-<n>](<issue url>) <stopped | merged | deployed | opened for review | dropped>: <why or what, one line>`
+`* YYYY-MM-DD HH:MM UTC: [SES-<n>](<issue url>) <stopped | merged | deployed | opened for review | dropped>: <why or what, one line>`
