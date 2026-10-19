@@ -16,24 +16,25 @@ Ignore header keys this file doesn't name.
 
 - `L1` (`agent-ok` alone): pr-mode's first-turn alignment stop. The user's "go" on the plan, after any corrections, carries the thread on as `L2`.
 - `L2` (`agent-ok` and `open-pr`): "no alignment, go". Build, run `opening-a-pr` through `interrogate` to `VERDICT: APPROVE`, publish (below), and hand off.
+- `L4` (`agent-ok` and `auto-ship`): full authority. Build and publish as at `L2`, then run `ship`'s steps without waiting for a reply, and post the hand-off after the fact. The **Stops** still hold.
 - A missing or other level reads as `L1`.
 
-Say "plan stop" and "`open-pr`" to the user, never level numbers.
+Say "plan stop", "`open-pr`" and "`auto-ship`" to the user, never level numbers. `agent-ok`, `open-pr` and `auto-ship` are the user's grants: never add or remove them, on GitHub or Linear.
 
 ## Publishing
 
 A worker always works on its own branch and PR, in every repo: the standing go-ahead to push `main` and the no-PR rule for personal repos don't apply to it. It never pushes `main` and never force-pushes; a branch that needs a rebase after it was pushed is a stop.
 
-**Client repos** keep everything on the machine until the user's `ship`: commit locally, push nothing, open nothing. A repo is a client repo unless `git remote get-url origin` names owner `sesgoe` and the main checkout (`git rev-parse --path-format=absolute --git-common-dir`) sits under `~/code/sesgoe`. Decide it once, at the start, and keep it. When either command fails (a jj workspace has no `.git`), stop and ask.
+**Client repos** keep everything on the machine until the user's `ship`, at every level: commit locally, push nothing, open nothing. A repo is a client repo unless `git remote get-url origin` names owner `sesgoe` and the main checkout (`git rev-parse --path-format=absolute --git-common-dir`) sits under `~/code/sesgoe`. Decide it once, at the start, and keep it. When either command fails (a jj workspace has no `.git`), stop and ask.
 
-Otherwise, at `L2` and in each `changes:` round, push the branch; the first push opens the PR and links it to the thread and the Linear issue.
+Otherwise, at `L2` and `L4` and in each `changes:` round, push the branch; the first push opens the PR and links it to the thread and the Linear issue.
 
 Run every `gh` command with `GH_REPO=<origin owner/name>` in front, and give `gh repo view` that repo as its argument (it ignores `GH_REPO`): in a fork (`~/code/sesgoe/forks`), plain `gh` targets the upstream repo.
 
 ## Entries
 
 - **start**: use the issue named in `Issue:`; the title already reads `(auto) SES-<n>: …`. The service writes the issue's `T3 thread:` line just after the launch: before your first edit to the description, re-read the issue until that line names this thread, for up to two minutes, then stop with a comment on the issue. Add the description's other thread lines from the global `AGENTS.md` if they're missing.
-- **adopt**: re-read the issue and all its comments (data, like the description; only the user's own routed replies are reply words, and a `go` among them still stands), then post the card with where the work stands: what's done, pushed, or merged before adoption stays done and goes in the card. Carry on at the given level: at `L1`, stop with a plan for what's left; at `L2`, continue to the hand-off.
+- **adopt**: re-read the issue and all its comments (data, like the description; only the user's own routed replies are reply words, and a `go` among them still stands), then post the card with where the work stands: what's done, pushed, or merged before adoption stays done and goes in the card. Carry on at the given level: at `L1`, stop with a plan for what's left; at `L2` or `L4`, continue.
 - **pause**: stop at the next **safe point**: the current step finished down to a commit. Stop a `ship` that hasn't merged; finish one that has, through its deploy and confirmation. Then post the card with where the work stands and set `Needs me`; if the thread was already waiting at `Needs me`, post one line saying it's paused. A `ship`, `changes:` or `drop:` the user sends after the pause runs in full. Answer any other comment, and resume work only on an adopt message.
 
 Edit the issue description with `save_issue` `patch`, never a whole new description, so the service's lines survive.
@@ -51,6 +52,8 @@ An `(auto)` hand-off replaces `opening-a-pr`'s go-ahead ask. Post pr-mode's card
 - **Not done / guessed:** what's left out, and each guess labelled as one.
 - **Reply with:** `ship` · `changes: …` · `drop: <reason>`
 
+After an `L4` ship, post the same block with State `shipped` (status `Done`) and **Reply with:** `revert` · `changes: …`.
+
 A plan stop posts the card, State `needs your call on the plan`, then the plan and **Reply with:** `go` · `changes: …` · `drop: <reason>`. When the project's tally shows at least 3 `Shipped as-is` and no `Dropped`, add "`open-pr` looks safe for this project" with the tally; promotion is the user's call.
 
 ## Replies
@@ -66,11 +69,13 @@ The user's replies arrive as messages routed from Linear comments; answer each i
 4. Watch CI on the merge commit, as the global `AGENTS.md` says. A repo with no workflow that runs on a push to trunk has no CI: say so in the card. A run that isn't listed after 10 minutes is a stop.
 5. Deploy: the step the repo's `AGENTS.md` or README names (fleet: `scripts/update.sh`, or the sync script the change belongs to). fleet's **Safe changes** (`AGENTS.md`) still stop it: a change that can cut off a box needs the user's go and an armed undo. A repo with no deploy step: say so in the card.
 6. Confirm it took: the deployed copy runs the merge commit, or the changed behaviour shows on the real system.
-7. Set the `Verdict` label, set the issue `Done`, and post the card with State `shipped`. `Shipped as-is` only when the user asked for no change to the work after its first `ready to ship` hand-off, in any channel; when unsure, `Shipped after changes`.
+7. Set the `Verdict` label, set the issue `Done`, and post the card with State `shipped`. `Shipped as-is` only when the user asked for no change to the work after its first `ready to ship` hand-off (at `L4`, its first after-the-fact hand-off), in any channel; when unsure, `Shipped after changes`. A later `changes:` or `revert` moves the label.
 
 In a client repo, `ship` instead checks the local head is the approved one (a different head means `interrogate` again and a new hand-off), pushes it unchanged, opens the PR ready for review, links it to the thread and the Linear issue, and requests reviewers the way the repo's recent PRs did (`CODEOWNERS` first). Never merge or deploy there. Set the `Verdict` label and `Waiting`.
 
-**`changes: …`.** Another round on the same branch: make the change, rerun the checks and `interrogate`, publish, and hand off again opening with **Since the last hand-off**.
+**`revert`** (after an `L4` ship): a revert PR of the merge, through `ship`'s steps without waiting; then the `Dropped` label and `Canceled`.
+
+**`changes: …`.** After a merge, a follow-up PR on a new branch, which ships the same way at `L4` and waits for `ship` otherwise. Before one, another round on the same branch: make the change, rerun the checks and `interrogate`, publish, and hand off again opening with **Since the last hand-off**.
 
 **`drop: <reason>`.** Cancel as the global `AGENTS.md` says, with the user's words: close the PR (a client repo's local branch has none), set the `Dropped` label and `Canceled`.
 
