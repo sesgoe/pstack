@@ -78,7 +78,7 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   each PR and issue, 2026-10-16; the first turn sets up the thread's Linear issue and stops to align: the card plus
   a plan in the agent's own words, unless the user says "no alignment, go", and every card also goes on the
   Linear issue and sets its status, 2026-10-18; `auto.md` holds the rules for `(auto)` workers that
-  controller-webhooks starts, adopts or pauses from the `agent-ok` label: the level-aware start, the
+  controller-webhooks starts, adopts, pauses or resumes from "Ready for Agent", `Mode: pr-mode`, `Autonomy` and `Paused`: the level-aware start, the
   hand-off block, `ship` / `changes:` / `drop:`, `L4` full authority from `auto-ship`, stops, and the Autonomy log, 2026-10-19). New workflow triggers go there, not
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
