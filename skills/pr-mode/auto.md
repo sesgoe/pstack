@@ -52,7 +52,6 @@ An `(auto)` hand-off replaces `opening-a-pr`'s go-ahead ask. Post pr-mode's card
 - **Not done / guessed:** what's left out, and each guess labelled as one.
 - **Reply with:** `ship` · `changes: …` · `drop: <reason>`
 
-
 A plan stop posts the card, State `needs your call on the plan`, then the plan and **Reply with:** `go` · `changes: …` · `drop: <reason>`. When the project's tally shows at least 3 `Shipped as-is` and no `Dropped`, add "`open-pr` looks safe for this project" with the tally; promotion is the user's call.
 
 ## Replies
@@ -68,25 +67,25 @@ The user's replies arrive as messages routed from Linear comments; answer each i
 4. Watch CI on the merge commit, as the global `AGENTS.md` says. A repo with no workflow that runs on a push to trunk has no CI: say so in the card. A run that isn't listed after 10 minutes is a stop.
 5. Deploy: the step the repo's `AGENTS.md` or README names (fleet: `scripts/update.sh`, or the sync script the change belongs to). fleet's **Safe changes** (`AGENTS.md`) still stop it: a change that can cut off a box needs the user's go and an armed undo. A repo with no deploy step: say so in the card.
 6. Confirm it took: the deployed copy runs the merge commit, or the changed behaviour shows on the real system.
-7. Set the `Verdict` label, set the issue `Done`, and post the card with State `shipped`. `Shipped as-is` only when the user asked for no change to the work after its first `ready to ship` hand-off, in any channel (at `L4`, see **L4**); when unsure, `Shipped after changes`. A later `changes:` or `revert` moves the label.
+7. Set the `Verdict` label, set the issue `Done`, and post the card with State `shipped` and **Reply with:** `revert` · `changes: …`. `Shipped as-is` only when the user asked for no change to the work after its first `ready to ship` hand-off, in any channel (at `L4`, see **L4**); when unsure, `Shipped after changes`. A later `changes:` or `revert` moves the label.
 
 In a client repo, `ship` instead checks the local head is the approved one (a different head means `interrogate` again and a new hand-off), pushes it unchanged, opens the PR ready for review, links it to the thread and the Linear issue, and requests reviewers the way the repo's recent PRs did (`CODEOWNERS` first). Never merge or deploy there. Set the `Verdict` label and `Waiting`.
 
 **`changes: …`.** Before the merge: another round on the same branch: make the change, rerun the checks and `interrogate`, publish, and hand off again opening with **Since the last hand-off**. After a merge: a follow-up PR on a new branch, through the same steps.
 
-**`revert`** (after a merge, including at a stop after one): one revert PR undoing every merge this issue shipped, newest first, through `interrogate` and the same steps; then the `Dropped` label and `Canceled`.
+**`revert`** (after a merge, including at a stop after one) is the user's go for one revert PR undoing every merge this issue shipped, newest first: build it, run `interrogate`, publish, then `ship`'s steps without waiting. After step 6, set the `Dropped` label and `Canceled`.
 
 **`drop: <reason>`.** Cancel as the global `AGENTS.md` says, with the user's words: close the PR (a client repo's local branch has none), set the `Dropped` label and `Canceled`.
 
 ## L4
 
 `auto-ship` is full authority in a personal repo; in a client repo, `L4` runs as `L2`. The run:
-1. Before publishing, check the diff against the **Stops**. A change fleet's **Safe changes** covers, or one that needs sudo or secrets, runs as `L2` from here: the `ready to ship` hand-off, then wait.
-2. After `interrogate` approves and the branch is published, post the hand-off block with State `shipping` (status `In Progress`): its **Review** line is the approved head `ship` step 1 reads.
-3. Run `ship`'s steps without waiting. Right before the merge and again before the deploy, re-read the issue's labels: with `auto-ship` gone, edit the block to `ready to ship`, set `Needs me`, and wait.
-4. Step 7 edits that same comment: State `shipped`, **Reply with:** `revert` · `changes: …`.
+1. Before publishing, check the diff against the **Stops**. A change fleet's **Safe changes** covers, or one that needs sudo or secrets, runs as `L2` from here: the `ready to ship` hand-off, saying the deploy will need its own go, then wait.
+2. After `interrogate` approves and the branch is published, post the hand-off block with State `shipping` (status `In Progress`) and **Reply with:** `changes: …` · `drop: <reason>`. Its **Review** line is the approved head `ship` step 1 reads.
+3. Run `ship`'s steps without waiting. Right before the merge, re-read the issue's labels and the user's new comments. With `agent-ok` gone, this is the pause's safe point. With `auto-ship` gone, post a new `ready to ship` hand-off, set `Needs me`, and wait. A `changes:` restarts the run at step 1 on the new diff. Once merged, the run finishes through step 7 whatever message arrives; the **Stops** still hold.
+4. Step 7 edits the `shipping` comment to `shipped`: that one edit is a status update, not a new hand-off. Any stop instead posts a new comment, and edits the `shipping` one to point at it.
 
-A `changes:` before the merge folds into the run, which carries on without waiting. A `changes:` or `revert` after it ships the same way. The `Verdict` is `Shipped after changes` when the user asked for any change to the work, before adoption or during the run, in any channel.
+The `Verdict` is `Shipped after changes` when the user asked for a change to the work after its first published hand-off (`shipping` or `ready to ship`), in any channel; corrections at a plan stop don't count.
 
 ## Stops
 
