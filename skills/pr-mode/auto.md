@@ -47,9 +47,11 @@ Every stop and every step the user should see is one **stage post**, in this ord
 | `shipped` | shipped | `Done` | hand-off block, CI and deploy results | `revert` · `changes: …` | none |
 | `opened for review` (client) | waiting on reviewers | `Waiting` | the PR link | `changes: …` · `drop: <reason>` | opened for review |
 | `stopped` | blocked on <x> or needs your call on <y> | `Needs me` | one question | `revert` after a merge; otherwise `changes: …` · `drop: <reason>` | stopped |
-| `in person` | needs you in person for <z> | `Meat Proxy` | the prep done, and the step left | `go`; `revert` after a merge; otherwise also `changes: …` · `drop: <reason>` | stopped |
+| `in person` | needs you in person for <z> | `Meat Proxy` | the prep done, and the step left | `go`, plus `revert` after a merge, or `changes: …` · `drop: <reason>` before one | stopped |
 | `paused` | paused | `Needs me` | where the work stands | `ship` · `changes: …` · `revert` · `drop: <reason>`, each runs in full | stopped |
 | `canceled` | dropped, or reverted | `Canceled` | the user's words, or the revert PR's link | none | dropped (on `drop:`) |
+
+Any reply word at `in person` sets `In Progress` before it runs: fleet-controller moves only `Needs me` and `Waiting` on a reply.
 
 The **hand-off block**:
 - **Risk:** Low, Medium or High, and why in one line (what runs it, what it can break). pr-mode's `thermo-nuclear-code-quality-review` recommendation goes here.
@@ -64,7 +66,7 @@ A reply word the current stage doesn't list gets an answer saying where the work
 
 ## Reply words
 
-- **`go`**: at `in person`, the user took the step: set `In Progress` and carry on from it. Otherwise it opens the plan gate. Build, run `opening-a-pr` through `interrogate` to `VERDICT: APPROVE`, publish without asking (the stage post replaces `opening-a-pr`'s go-ahead ask), then the ship gate.
+- **`go`**: at `in person`, the user took the step: carry on from it. Otherwise it opens the plan gate. Build, run `opening-a-pr` through `interrogate` to `VERDICT: APPROVE`, publish without asking (the stage post replaces `opening-a-pr`'s go-ahead ask), then the ship gate.
 - **`changes: …`**: at a plan stop, revise the plan and post `plan stop` again. Before a merge, another round on the same branch: the change, the checks, `interrogate`, publish, then the ship gate again, opening the post with **Since the last hand-off**. After a merge, the same path on a new branch and PR.
 - **`ship`**: replaces poteto-mode's Shipping playbook for the thread.
   1. Fetch, and check the PR head is the approved head SHA on **Review**. A different head means `interrogate` again and a new `ready to ship`.
