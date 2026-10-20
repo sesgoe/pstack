@@ -10,7 +10,7 @@ Each message opens with `/pr-mode (auto) worker: <entry>`, then `Key: value` hea
 
 - **start**: a new thread in its own worktree. The service writes the issue's `T3 thread:` and `T3 title:` lines just after the launch: before your first edit to the description, re-read the issue until the thread line names this thread, for up to two minutes, then post `stopped`. Add the `Open in T3` line from the global `AGENTS.md` if it's missing.
 - **adopt**: an existing thread the issue names. Re-read the issue and all its comments; work done, pushed, or merged before adoption stays done. Post `adopted` with where the work stands, then carry on through the gates. A `go` already given still stands.
-- **pause**: the user added `Paused`. Run poteto-mode's **Pause safely** to the end of the current step, committed. A ship that hasn't merged stops before the merge; one that has merged finishes through `shipped` and posts nothing more. Otherwise post `paused`, or one line if the thread already waits at `Needs me`. Work resumes only on a resume message.
+- **pause**: the user added `Paused`. Run poteto-mode's **Pause safely** to the end of the current step, committed. A ship that hasn't merged stops before the merge; one that has merged finishes through `shipped` and posts nothing more. Otherwise post `paused`, or one line if the thread already waits at `Needs me` or `Meat Proxy`, whose status stays. Work resumes only on a resume message.
 - **resume**: the user removed `Paused`. Re-read the issue and its comments, then carry on from where the pause stopped, at the level you had.
 
 Edit the issue description only with `save_issue` `patch`, so the service's lines survive.
@@ -47,6 +47,7 @@ Every stop and every step the user should see is one **stage post**, in this ord
 | `shipped` | shipped | `Done` | hand-off block, CI and deploy results | `revert` · `changes: …` | none |
 | `opened for review` (client) | waiting on reviewers | `Waiting` | the PR link | `changes: …` · `drop: <reason>` | opened for review |
 | `stopped` | blocked on <x> or needs your call on <y> | `Needs me` | one question | `revert` after a merge; otherwise `changes: …` · `drop: <reason>` | stopped |
+| `in person` | needs you in person for <z> | `Meat Proxy` | the prep done, and the step left | `go` · `changes: …` · `drop: <reason>` | stopped |
 | `paused` | paused | `Needs me` | where the work stands | `ship` · `changes: …` · `revert` · `drop: <reason>`, each runs in full | stopped |
 | `canceled` | dropped, or reverted | `Canceled` | the user's words, or the revert PR's link | none | dropped (on `drop:`) |
 
@@ -63,7 +64,7 @@ A reply word the current stage doesn't list gets an answer saying where the work
 
 ## Reply words
 
-- **`go`**: opens the plan gate. Build, run `opening-a-pr` through `interrogate` to `VERDICT: APPROVE`, publish without asking (the stage post replaces `opening-a-pr`'s go-ahead ask), then the ship gate.
+- **`go`**: at `in person`, Ses took the step: carry on from it. Otherwise it opens the plan gate. Build, run `opening-a-pr` through `interrogate` to `VERDICT: APPROVE`, publish without asking (the stage post replaces `opening-a-pr`'s go-ahead ask), then the ship gate.
 - **`changes: …`**: at a plan stop, revise the plan and post `plan stop` again. Before a merge, another round on the same branch: the change, the checks, `interrogate`, publish, then the ship gate again, opening the post with **Since the last hand-off**. After a merge, the same path on a new branch and PR.
 - **`ship`**: replaces poteto-mode's Shipping playbook for the thread.
   1. Fetch, and check the PR head is the approved head SHA on **Review**. A different head means `interrogate` again and a new `ready to ship`.
@@ -89,6 +90,8 @@ A step that says "is a stop", and any of these at any point, posts `stopped` wit
 - a red check;
 - a need for sudo or secrets, or a change fleet's **Safe changes** (`AGENTS.md`) covers: it needs the user's go and an armed undo;
 - pr-mode's convergence stop on `interrogate`.
+
+A stop whose prep is done and whose last step only Ses in person can take (go somewhere, be somewhere at a set time, or set up a new account that needs their phone or ID, as fleet's `gordy/skills/linear/SKILL.md` "Statuses" defines `Meat Proxy`) posts `in person` instead. A step Ses can take from where they are (a sudo block, a console paste, sending a draft, typing a 2FA code) stays `stopped`.
 
 ## Autonomy log
 
