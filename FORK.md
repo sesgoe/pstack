@@ -77,7 +77,7 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   five-line card: the goal and problem restated, pr# and i# numbers, state, and the ask, 2026-10-15; written as markdown with ↗ links to
   each PR and issue, 2026-10-16; the first turn sets up the thread's Linear issue and stops to align: the card plus
   a plan in the agent's own words, unless the user says "no alignment, go", and every card also goes on the
-  Linear issue and sets its status, 2026-10-18; `auto.md` holds the rules for `(auto)` workers that controller-webhooks drives, 2026-10-19). New workflow triggers go there, not
+  Linear issue and sets its status, 2026-10-18; `auto.md` holds the rules for the `(linked)` and `(auto-ship)` workers that fleet-controller drives, 2026-10-19; once `(auto)`, renamed 2026-10-20, Linear SES-95). New workflow triggers go there, not
   into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
   `cursor-team-kit`, which fleet installs.
 
