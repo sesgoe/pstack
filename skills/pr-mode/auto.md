@@ -91,7 +91,7 @@ A step that says "is a stop", and any of these at any point, posts `stopped` wit
 - a need for sudo or secrets, or a change fleet's **Safe changes** (`AGENTS.md`) covers: it needs the user's go and an armed undo;
 - pr-mode's convergence stop on `interrogate`.
 
-A stop that pr-mode's card would mark `Meat Proxy` (only the user in person can take the last step) posts `in person` instead.
+A stop that pr-mode's status rule maps to `Meat Proxy` posts `in person` instead.
 
 ## Autonomy log
 
