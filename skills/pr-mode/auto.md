@@ -10,7 +10,7 @@ Each message opens with `/pr-mode (auto) worker: <entry>`, then `Key: value` hea
 
 - **start**: a new thread in its own worktree. The service writes the issue's `T3 thread:` and `T3 title:` lines just after the launch: before your first edit to the description, re-read the issue until the thread line names this thread, for up to two minutes, then post `stopped`. Add the `Open in T3` line from the global `AGENTS.md` if it's missing.
 - **adopt**: an existing thread the issue names. Re-read the issue and all its comments; work done, pushed, or merged before adoption stays done. Post `adopted` with where the work stands, then carry on through the gates. A `go` already given still stands.
-- **pause**: the user added `Paused`. Run poteto-mode's **Pause safely** to the end of the current step, committed. A ship that hasn't merged stops before the merge; one that has merged finishes through `shipped` and posts nothing more. Otherwise post `paused`, or one line if the thread already waits at `Needs me` or `Meat Proxy`, whose status stays. Work resumes only on a resume message.
+- **pause**: the user added `Paused`. Run poteto-mode's **Pause safely** to the end of the current step, committed. A ship that hasn't merged stops before the merge; one that has merged finishes through `shipped` and posts nothing more. Otherwise post `paused`, or one line if the issue is closed or already in `Needs me` or `Meat Proxy`, whose status stays. Work resumes only on a resume message.
 - **resume**: the user removed `Paused`. Re-read the issue and its comments, then carry on from where the pause stopped, at the level you had.
 
 Edit the issue description only with `save_issue` `patch`, so the service's lines survive.
