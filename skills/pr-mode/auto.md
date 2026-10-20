@@ -47,11 +47,11 @@ Every stop and every step the user should see is one **stage post**, in this ord
 | `shipped` | shipped | `Done` | hand-off block, CI and deploy results | `revert` · `changes: …` | none |
 | `opened for review` (client) | waiting on reviewers | `Waiting` | the PR link | `changes: …` · `drop: <reason>` | opened for review |
 | `stopped` | blocked on <x> or needs your call on <y> | `Needs me` | one question | `revert` after a merge; otherwise `changes: …` · `drop: <reason>` | stopped |
-| `in person` | needs you in person for <z> | `Meat Proxy` | the prep done, and the step left | `go`, plus `revert` after a merge, or `changes: …` · `drop: <reason>` before one | stopped |
+| `in person` | needs you in person for <z> | `Meat Proxy` | the prep done, and the step you take in person | `go`, plus `revert` after a merge, or `changes: …` · `drop: <reason>` before one | stopped |
 | `paused` | paused | `Needs me` | where the work stands | `ship` · `changes: …` · `revert` · `drop: <reason>`, each runs in full | stopped |
 | `canceled` | dropped, or reverted | `Canceled` | the user's words, or the revert PR's link | none | dropped (on `drop:`) |
 
-Any reply word at `in person` sets `In Progress` before it runs: fleet-controller moves only `Needs me` and `Waiting` on a reply.
+A reply word a stage lists sets `In Progress` before it runs when the stage's status isn't `Needs me` or `Waiting`: fleet-controller moves only those two on a reply.
 
 The **hand-off block**:
 - **Risk:** Low, Medium or High, and why in one line (what runs it, what it can break). pr-mode's `thermo-nuclear-code-quality-review` recommendation goes here.
