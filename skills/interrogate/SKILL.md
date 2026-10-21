@@ -64,7 +64,7 @@ A reviewer that needs its own worktree (see above) gets `prepare-reviewer` in pl
 EOF
 ```
 
-It resolves `--head` once, renders the prompt, adds a detached worktree at that full SHA in `<prompt dir>/wt`, and prints `prompt=<path> wt=<path>`. A failure or a signal leaves neither behind; fix its input and run it again. The cleanup loop below removes the worktree with its prompt dir.
+It resolves `--head` once, renders the prompt, adds a detached worktree at that full SHA in `<prompt dir>/wt`, and prints `prompt=<path> wt=<path>`. A failure or a signal leaves neither behind (unless its launcher started that signal ignored); fix its input and run it again. The cleanup loop below removes the worktree with its prompt dir.
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 
@@ -85,7 +85,7 @@ It resolves `--head` once, renders the prompt, adds a detached worktree at that 
 
 Each child wakes your thread when it finishes; its `task_status` `summary` is that reviewer's result. To retry a failed reviewer, send a new `delegate_task` with a new `clientRequestId`. If `delegate_task` rejects a reviewer (its provider is disabled), run that reviewer the non-T3 way above and say so under **Reviewers**. Child threads don't show in the sidebar, but archiving one leaves its worktree and branch in place, so the cleanup below covers them.
 
-**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout of the reviewed repo, with every agent id and the directory of every prompt path printed this round (skip the first line when no reviewer used `isolation: "worktree"`):
+**After the verdict**, remove the Claude Code reviewers' worktrees and this round's prompt directories. `isolation: "worktree"` leaves each reviewer's worktree, locked, under the main checkout's `.claude/worktrees/agent-<id>` on a `worktree-agent-<id>` branch. From the main checkout of your session's repo, the one those worktrees were cut from (in a cross-repo review, not the reviewed repo), with every agent id and the directory of every prompt path printed this round (skip the first line when no reviewer used `isolation: "worktree"`; the second line works from any directory):
 
 ```sh
 for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$id && git branch -D worktree-agent-$id; done

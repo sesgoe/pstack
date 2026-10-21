@@ -2,7 +2,8 @@
 # Prepare one interrogate reviewer: render its prompt and check out <head> in a worktree beside it.
 # Usage: prepare-reviewer <render-prompt flags>   (run from the reviewed repo's git checkout)
 # Prints "prompt=<path> wt=<path>". The worktree is <prompt dir>/wt, so the cleanup loop over prompt
-# dirs removes it. A failure, or INT/TERM/HUP once the prompt is written, leaves neither behind.
+# dirs removes it. A failure, or a TERM, INT, or HUP once the prompt is written, leaves neither
+# behind, unless the launcher started that signal ignored: bash can't trap it then.
 set -euo pipefail
 
 head="" flags=()

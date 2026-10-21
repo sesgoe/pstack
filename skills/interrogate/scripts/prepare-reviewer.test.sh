@@ -42,10 +42,9 @@ out2=$(cd "$sub" && "$prep" --head HEAD --base HEAD~1 --intent x)
 check "it works from a subdirectory of the reviewed repo" "$(git rev-parse HEAD)" "$(git -C "${out2##* wt=}" rev-parse HEAD)"
 rmdir "$sub"
 
-git worktree remove -f -f "$dir/wt"; rm -rf "$dir"
 wt2=${out2##* wt=}
-git worktree remove -f -f "$wt2"; rm -rf "${wt2%/wt}"
-check "the cleanup loop's commands remove it all" "1 0" "$(worktrees) $(leftovers)"
+(cd / && for d in "$dir" "${wt2%/wt}"; do [ ! -d "$d/wt" ] || git -C "$d/wt" worktree remove -f -f "$d/wt"; rm -rf "$d"; done)
+check "SKILL.md's cleanup loop, run from /, removes it all" "1 0" "$(worktrees) $(leftovers)"
 
 check "a failed render fails before any worktree" "render-prompt: --exclude nosuch: matches no changed path" \
   "$("$prep" --head HEAD --base HEAD~1 --exclude nosuch --intent x 2>&1 || true)"
