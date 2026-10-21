@@ -82,12 +82,14 @@ rm -rf "$scratch"/tmp/*
 launcher=$!
 for _ in $(seq 50); do [ -e "$scratch/in-hook" ] && break; sleep 0.1; done
 kill -TERM "$launcher" 2>/dev/null || true
-sleep 0.3; touch "$scratch/release"
+for _ in $(seq 20); do kill -0 "$launcher" 2>/dev/null || break; sleep 0.1; done
+stopped=$(kill -0 "$launcher" 2>/dev/null && echo "still running" || echo "stopped")
+touch "$scratch/release"
 if wait "$launcher"; then status=0; else status=$?; fi
 ran=$([ -e "$scratch/in-hook" ] && echo "hook ran," || echo "hook never ran,")
-rm -f "$hook" "$scratch/in-hook" "$scratch/release"
-check "SIGTERM during preparation exits 130 and leaves no worktree or prompt dir" "hook ran, 130 1 0" \
-  "$ran $status $(worktrees) $(find "$scratch/tmp" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
+sleep 0.3; rm -f "$hook" "$scratch/in-hook" "$scratch/release"
+check "SIGTERM during preparation stops within 2s while the hook blocks, exits 130, and leaves nothing" \
+  "hook ran, stopped 130 1 0" "$ran $stopped $status $(worktrees) $(find "$scratch/tmp" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
 
 rm -rf "$scratch/args" "$scratch"/tmp/*
 check "a failed render fails before any worktree or codex run" "render-prompt: --exclude nosuch: matches no changed path" \

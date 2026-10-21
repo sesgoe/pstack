@@ -21,7 +21,7 @@ fi
 # prepare-reviewer and codex each run in the background, so a signal reaches the running child at
 # once: prepare-reviewer discards its own prompt dir and worktree, and the EXIT trap removes codex's.
 pid="" wt="" ready=$(mktemp)
-trap '[ -n "$wt" ] || wt=$(sed -n "s/.* wt=//p" "$ready"); rm -f "$ready"; [ -z "$wt" ] || git worktree remove -f -f "$wt" || true' EXIT
+trap 'rm -f "$ready"; [ -z "$wt" ] || git worktree remove -f -f "$wt" || true' EXIT
 trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; wait; exit 130' INT TERM HUP
 "$(dirname "$0")/prepare-reviewer" "${flags[@]}" <&0 > "$ready" &
 pid=$!
