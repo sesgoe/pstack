@@ -18,15 +18,14 @@ git rev-parse --git-dir >/dev/null 2>&1 ||
 
 sha=$(git rev-parse --verify -q "$head^{commit}") || { echo "prepare-reviewer: --head $head: not a commit" >&2; exit 2; }
 # git worktree add runs in the background so a signal is handled at once, not after checkout hooks.
-p="" add=""
+p=""
 discard() {
-  [ -z "$add" ] || { kill "$add" 2>/dev/null || true; wait "$add" 2>/dev/null || true; }
+  # shellcheck disable=SC2046 # jobs -p is one PID per word
+  kill $(jobs -p) 2>/dev/null || true; wait 2>/dev/null || true
   [ -z "$p" ] || { git worktree remove -f -f "${p%/*}/wt" 2>/dev/null || true; rm -rf "${p%/*}"; }
 }
 trap 'discard; exit 130' INT TERM HUP
 p=$("$(dirname "$0")/render-prompt" --head "$sha" "${flags[@]}")
 git worktree add -q --detach "${p%/*}/wt" "$sha" &
-add=$!
-wait "$add" || { add=""; discard; exit 1; }
-add=""
+wait "$!" || { discard; exit 1; }
 echo "prompt=$p wt=${p%/*}/wt"
