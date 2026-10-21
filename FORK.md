@@ -67,32 +67,10 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   - its step 1 loads the user's `writing-for-agents` skill when it is installed, before the
     harness's skill-authoring skill (2026-10-15).
 
-- `skills/pr-mode` (ours, 2026-10-10): the user's entry point for PR work. It runs `poteto-mode`
-  and adds local triggers (`verify-this` for Verification claims, a recommended
-  `thermo-nuclear-code-quality-review` on one-way doors, a stop-and-ask when the `interrogate`
-  loop stops converging, and later-step findings going to the issue, 2026-10-13; the stop also counts
-  rounds of mostly fallout or out-of-threat-model findings and a growing do-not-re-report list, and
-  forecasts the next round's yield, 2026-10-13; Consider items are listed and offered as a follow-up
-  issue before the hand-off closes the source issue, 2026-10-15; every hand-off opens with a
-  five-line card: the goal and problem restated, pr# and i# numbers, state, and the ask, 2026-10-15; written as markdown with ↗ links to
-  each PR and issue, 2026-10-16; the first turn sets up the thread's Linear issue and stops to align: the card plus
-  a plan in the agent's own words, unless the user says "no alignment, go", and every card also goes on the
-  Linear issue and sets its status, 2026-10-18; `auto.md` holds the rules for the `(linked)` and `(auto-ship)` workers that fleet-controller drives, 2026-10-19; once `(auto)`, renamed 2026-10-20, Linear SES-95). New workflow triggers go there, not
-  into `poteto-mode`, so upstream merges stay small. The triggered skills come from Cursor's
-  `cursor-team-kit`, which fleet installs.
-
-- `skills/retro` (ours, 2026-10-10): the user's retrospective, a wrapper over `reflect` in the
-  same shape as `pr-mode`. It replaces Matt Pocock's `/retro`. It appends retro's lenses
-  (navigation, guardrails, steering bloat, tool economy, information access, repo lessons) to
-  reflect's reviewer prompts, and routing overrides to its synthesizer: lessons can land in the
-  repo's AGENTS.md or a doc, in the global AGENTS.md, or go to `correct` to become a check;
-  the skill-was-used gate covers skill edits only; the backlog is listed, not filed.
-  `reflect` itself is unchanged.
-
-- `skills/writing-for-agents` (2026-10-10): copied unchanged from Matt Pocock's skills
-  (github.com/mattpocock/skills, `skills/productivity/writing-for-agents` at `6fd9479`, MIT,
-  license in the skill folder). pstack's `technical-writing` covers docs for people; this one
-  covers text for an agent's context (AGENTS.md lines, skill descriptions). `retro` loads it.
+- The user's own skills, `pr-mode` (with `auto.md`) and `retro`, and the copy of Matt Pocock's
+  `writing-for-agents`, lived here until Linear SES-117 (October 2026) moved them to
+  `sesgoe/agent-config`'s `skills/`. This fork keeps only its patches to upstream skills. Their
+  history before the move is in this repo's log.
 
 - `AGENTS.md`, `scripts/check.sh`, and `.github/workflows/check.yml` (ours, 2026-10-13): the check
   runs every `skills/*/scripts/*.test.sh`, such as `render-prompt.test.sh`. Since 2026-10-15 the tests
