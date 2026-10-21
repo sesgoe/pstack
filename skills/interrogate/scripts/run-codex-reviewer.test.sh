@@ -73,6 +73,22 @@ alive() { kill -0 "$1" 2>/dev/null && echo alive || echo gone; }
 check "SIGTERM stops a running codex, exits 130, and removes the worktree" "codex ran, 130 gone 1" \
   "$([ -s "$scratch/hung" ] && echo "codex ran," || echo "codex never ran,") $status $(alive "$(cat "$scratch/hung")") $(worktrees)"
 
+hook=$repo/.git/hooks/post-checkout
+# shellcheck disable=SC2016
+printf '#!/bin/sh\ntouch "$CODEX_LOG/in-hook"\nwhile [ ! -e "$CODEX_LOG/release" ]; do sleep 0.1; done\n' > "$hook"
+chmod +x "$hook"
+rm -rf "$scratch"/tmp/*
+"$run" --model m1 --effort high --head HEAD --base HEAD~1 --intent x >/dev/null 2>&1 &
+launcher=$!
+for _ in $(seq 50); do [ -e "$scratch/in-hook" ] && break; sleep 0.1; done
+kill -TERM "$launcher" 2>/dev/null || true
+sleep 0.3; touch "$scratch/release"
+if wait "$launcher"; then status=0; else status=$?; fi
+ran=$([ -e "$scratch/in-hook" ] && echo "hook ran," || echo "hook never ran,")
+rm -f "$hook" "$scratch/in-hook" "$scratch/release"
+check "SIGTERM during preparation exits 130 and leaves no worktree or prompt dir" "hook ran, 130 1 0" \
+  "$ran $status $(worktrees) $(find "$scratch/tmp" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
+
 rm -rf "$scratch/args" "$scratch"/tmp/*
 check "a failed render fails before any worktree or codex run" "render-prompt: --exclude nosuch: matches no changed path" \
   "$("$run" --model m1 --effort high --head HEAD --base HEAD~1 --exclude nosuch --intent x 2>&1 || true)"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Prepare one interrogate reviewer: render its prompt and check out <head> in a worktree beside it.
-# Usage: prepare-reviewer <render-prompt flags>   (run from anywhere in the reviewed repo)
+# Usage: prepare-reviewer <render-prompt flags>   (run from the reviewed repo's git checkout)
 # Prints "prompt=<path> wt=<path>". The worktree is <prompt dir>/wt, so the cleanup loop over prompt
-# dirs removes it. A failure leaves neither a prompt dir nor a worktree behind.
+# dirs removes it. A failure, or INT/TERM/HUP once the prompt exists, leaves neither behind.
 set -euo pipefail
 
 head="" flags=()
@@ -13,9 +13,15 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$head" ] || { echo "prepare-reviewer: --head <sha> is required" >&2; exit 2; }
+git rev-parse --git-dir >/dev/null 2>&1 ||
+  { echo "prepare-reviewer: $PWD is not a git checkout; run it from the reviewed repo's git checkout (a jj workspace has none)" >&2; exit 2; }
 
 sha=$(git rev-parse --verify -q "$head^{commit}") || { echo "prepare-reviewer: --head $head: not a commit" >&2; exit 2; }
+p="" dir=""
+discard() { [ -n "$dir" ] || dir=${p%/*}; [ -z "$p" ] || { git worktree remove -f -f "$dir/wt" 2>/dev/null || true; rm -rf "$dir"; }; }
+trap 'discard; exit 130' INT TERM HUP
 p=$("$(dirname "$0")/render-prompt" --head "$sha" "${flags[@]}")
 dir=${p%/*}
-git worktree add -q --detach "$dir/wt" "$sha" || { rm -rf "$dir"; exit 1; }
+git worktree add -q --detach "$dir/wt" "$sha" || { discard; exit 1; }
+trap - INT TERM HUP
 echo "prompt=$p wt=$dir/wt"

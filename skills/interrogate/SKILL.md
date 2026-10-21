@@ -56,7 +56,7 @@ EOF
 
 It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, given from the repo root, such as `flake.lock`; an exclude that matches no changed path is an error; exclude both sides of a rename, or its directory, since one side alone shows the other as a whole added or deleted file), and the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. Every subagent reviewer's whole prompt, in any harness, is `Read <path> in full and follow it.` A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, and `{RUNNER}` empty unless that reviewer is the runner. Render every subagent reviewer's prompt first, then send the codex background call and the subagent spawns in one message.
 
-A reviewer that needs its own worktree (see above) gets `prepare-reviewer` in place of `render-prompt`, with the same flags, run from the reviewed repo:
+A reviewer that needs its own worktree (see above) gets `prepare-reviewer` in place of `render-prompt`, with the same flags, run from the reviewed repo's git checkout (from a jj workspace, its colocated main checkout):
 
 ```sh
 <skill>/scripts/prepare-reviewer --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
@@ -64,7 +64,7 @@ A reviewer that needs its own worktree (see above) gets `prepare-reviewer` in pl
 EOF
 ```
 
-It resolves `--head` once, renders the prompt, adds a detached worktree at that full SHA in `<prompt dir>/wt`, and prints `prompt=<path> wt=<path>`. A failure leaves neither behind; fix its input and run it again. The cleanup loop below removes the worktree with its prompt dir.
+It resolves `--head` once, renders the prompt, adds a detached worktree at that full SHA in `<prompt dir>/wt`, and prints `prompt=<path> wt=<path>`. A failure or a signal leaves neither behind; fix its input and run it again. The cleanup loop below removes the worktree with its prompt dir.
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 
@@ -92,7 +92,7 @@ for id in <agent-id>...; do git worktree remove -f -f .claude/worktrees/agent-$i
 for d in <prompt dir>...; do [ ! -d "$d/wt" ] || git worktree remove -f -f "$d/wt"; rm -rf "$d"; done
 ```
 
-For each T3 child task, read its `worktreePath` and `branch` with `t3_thread_read` on its `childThreadId`, archive it (`t3_thread_organize` `archive`), then from the main checkout run `git worktree remove -f -f <worktreePath> && git branch -D <branch>`.
+For each T3 child task, read its `worktreePath` and `branch` with `t3_thread_read` on its `childThreadId`, archive it (`t3_thread_organize` `archive`), then from the main checkout of your thread's repo, the one the child's worktree was cut from (in a cross-repo review, not the reviewed repo), run `git worktree remove -f -f <worktreePath> && git branch -D <branch>`.
 
 If `codex` is missing or the run fails, retry once. Never substitute a model from the parent's vendor. Name the failure under **Reviewers**. The verdict can't be `VERDICT: APPROVE` until a codex reviewer has run.
 

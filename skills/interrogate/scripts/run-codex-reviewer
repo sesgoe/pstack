@@ -18,14 +18,19 @@ if [ -z "$model" ] || [ -z "$effort" ]; then
   exit 2
 fi
 
-pid="" wt=""
-trap '[ -z "$wt" ] || git worktree remove -f -f "$wt" || true' EXIT
+# prepare-reviewer and codex each run in the background, so a signal reaches the running child at
+# once: prepare-reviewer discards its own prompt dir and worktree, and the EXIT trap removes codex's.
+pid="" wt="" ready=$(mktemp)
+trap '[ -n "$wt" ] || wt=$(sed -n "s/.* wt=//p" "$ready"); rm -f "$ready"; [ -z "$wt" ] || git worktree remove -f -f "$wt" || true' EXIT
 trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; wait; exit 130' INT TERM HUP
-ready=$("$(dirname "$0")/prepare-reviewer" "${flags[@]}")
-p=${ready#prompt=}
+"$(dirname "$0")/prepare-reviewer" "${flags[@]}" <&0 > "$ready" &
+pid=$!
+wait "$pid"
+line=$(< "$ready")
+p=${line#prompt=}
 p=${p% wt=*}
+wt=${line##* wt=}
 dir=${p%/*}
-wt=$dir/wt
 echo "prompt=$p out=$dir/out.md"
 
 codex exec -m "$model" -c "model_reasoning_effort=$effort" --dangerously-bypass-approvals-and-sandbox \

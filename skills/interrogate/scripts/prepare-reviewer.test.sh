@@ -51,16 +51,16 @@ check "a failed render fails before any worktree" "render-prompt: --exclude nosu
   "$("$prep" --head HEAD --base HEAD~1 --exclude nosuch --intent x 2>&1 || true)"
 check "  and leaves nothing behind" "1 0" "$(worktrees) $(leftovers)"
 
-git branch -q taken HEAD
-mkdir "$scratch/bin"
-cat > "$scratch/bin/git" <<STUB
-#!/usr/bin/env bash
-[ "\$1 \$2" = "worktree add" ] && { echo "fatal: stub refuses worktree add" >&2; exit 128; }
-exec $(command -v git) "\$@"
-STUB
-chmod +x "$scratch/bin/git"
-if PATH=$scratch/bin:$PATH "$prep" --head HEAD --base HEAD~1 --intent x >/dev/null 2>&1; then status=0; else status=$?; fi
-check "a failed worktree add exits nonzero and removes the prompt dir" "1 1 0" "$status $(worktrees) $(leftovers)"
+hook=$repo/.git/hooks/post-checkout
+printf '#!/bin/sh\nexit 1\n' > "$hook" && chmod +x "$hook"
+if "$prep" --head HEAD --base HEAD~1 --intent x >/dev/null 2>&1; then status=0; else status=$?; fi
+rm "$hook"
+check "a checkout hook that fails exits nonzero and leaves no registered worktree or prompt dir" "1 1 0" \
+  "$status $(worktrees) $(leftovers)"
+
+check "outside a git checkout it says where to run it" \
+  "prepare-reviewer: $scratch is not a git checkout; run it from the reviewed repo's git checkout (a jj workspace has none)" \
+  "$(cd "$scratch" && GIT_CEILING_DIRECTORIES=$scratch "$prep" --head HEAD --base HEAD~1 --intent x 2>&1 || true)"
 
 check "a bad --head names it" "prepare-reviewer: --head nosuch: not a commit" \
   "$("$prep" --head nosuch --base HEAD~1 --intent x 2>&1 || true)"
