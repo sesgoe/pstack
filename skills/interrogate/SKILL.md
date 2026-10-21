@@ -42,7 +42,7 @@ Launch all reviewers in a single message with the Task tool, one per entry on th
 
 Each reviewer gets `subagent_type: generalPurpose` and `model` set to its configured entry, or its table default when there is no configured line. Omit `model` for an `auto` or `inherit-parent` entry, so that reviewer runs on the parent model.
 
-Every reviewer runs in its own git worktree, so it can't touch the author's tree. In Claude Code, pass `isolation: "worktree"`. That worktree starts at the remote's default branch, not the reviewed commit, and the prompt's first step checks out `{HEAD_SHA}`. A `codex:` entry gets its worktree from the steps below. When the reviewed repo isn't your session's repo, `isolation: "worktree"` would cut the worktree from the wrong repo. In that case, or in a harness with neither, create one per reviewer beside its prompt, from the reviewed repo (`git worktree add --detach <prompt dir>/wt <full sha>`), and start the reviewer in it. Where your tool has a `readonly` flag, leave it off so reviewers can run code.
+Every reviewer runs in its own git worktree, so it can't touch the author's tree. In Claude Code, pass `isolation: "worktree"`. That worktree starts at the remote's default branch, not the reviewed commit, and the prompt's first step checks out `{HEAD_SHA}`. A `codex:` entry gets its worktree from the steps below. When the reviewed repo isn't your session's repo, `isolation: "worktree"` would cut the worktree from the wrong repo. In that case, or in a harness with neither, prepare each reviewer with `prepare-reviewer` (below) and start it in the printed `wt=`. `prepare-reviewer` is the one source of a reviewer worktree outside your harness's own isolation. Where your tool has a `readonly` flag, leave it off so reviewers can run code.
 
 A worktree doesn't contain a script that writes outside it (to another host, or to a path in the user's home or on a Windows drive). When the change has one, render one reviewer's prompt with `--runner <script>` to name it that script's runner; the others run its pieces.
 
@@ -55,6 +55,16 @@ EOF
 ```
 
 It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, given from the repo root, such as `flake.lock`; an exclude that matches no changed path is an error; exclude both sides of a rename, or its directory, since one side alone shows the other as a whole added or deleted file), and the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. Every subagent reviewer's whole prompt, in any harness, is `Read <path> in full and follow it.` A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, and `{RUNNER}` empty unless that reviewer is the runner. Render every subagent reviewer's prompt first, then send the codex background call and the subagent spawns in one message.
+
+A reviewer that needs its own worktree (see above) gets `prepare-reviewer` in place of `render-prompt`, with the same flags, run from the reviewed repo:
+
+```sh
+<skill>/scripts/prepare-reviewer --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
+<Step 2 paragraph>
+EOF
+```
+
+It resolves `--head` once, renders the prompt, adds a detached worktree at that full SHA in `<prompt dir>/wt`, and prints `prompt=<path> wt=<path>`. A failure leaves neither behind; fix its input and run it again. The cleanup loop below removes the worktree with its prompt dir.
 
 **`codex:<model>` entries** (for example `codex:gpt-6-astra`) run that reviewer through the Codex CLI instead of your subagent tool, so a Claude-led review still gets an OpenAI reviewer. The panel crosses vendors to cover blind spots from one lab's training. For each such entry:
 
@@ -71,7 +81,7 @@ It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the
 
 - `target`: a `codex:<model>` entry is provider `codex`, model `<model>`, option `reasoningEffort` set to the budget-line effort (or `high`). Any other entry is the provider and model id from `orchestrator_capabilities` that matches it (an alias like `opus` is that family's newest id), with its effort suffix (`-xhigh`) as the `effort` option. Omit `model` for an `auto` or `inherit-parent` entry.
 - `isolation: "worktree"`, `role: "review"`, `mode: "async"`, and a `title` and `clientRequestId` naming the round and the reviewer (`round 2, Reviewer B`). T3 can name the child's branch after its title (one trial child got `ses/review-task`), so keep titles distinct.
-- `task`: `Read <path> in full and follow it.` The child's worktree is cut from your thread's local commit and the prompt checks out `{HEAD_SHA}`. When the reviewed repo isn't your thread's repo, create the reviewer's worktree beside its prompt as above and start the task with `Work only in <prompt dir>/wt: cd there first.`
+- `task`: `Read <path> in full and follow it.` The child's worktree is cut from your thread's local commit and the prompt checks out `{HEAD_SHA}`. When the reviewed repo isn't your thread's repo, prepare each reviewer with `prepare-reviewer` and start its task with `Work only in <wt>: cd there first.`, naming the printed `wt=`. Keep `isolation: "worktree"` for it all the same: the unused worktree is a throwaway in case the child skips the `cd`.
 
 Each child wakes your thread when it finishes; its `task_status` `summary` is that reviewer's result. To retry a failed reviewer, send a new `delegate_task` with a new `clientRequestId`. If `delegate_task` rejects a reviewer (its provider is disabled), run that reviewer the non-T3 way above and say so under **Reviewers**. Child threads don't show in the sidebar, but archiving one leaves its worktree and branch in place, so the cleanup below covers them.
 

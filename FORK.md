@@ -48,8 +48,12 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     `codex exec` in a worktree beside it, and removes that worktree when codex exits. It replaced
     a multi-line SKILL.md block whose bugs took three review rounds. Round cleanup is a one-line loop
     in SKILL.md; a `cleanup-round` helper waits until that line gets mistyped.
-  - when the reviewed repo isn't the session's repo, a Claude reviewer's worktree is made by hand
-    at `<prompt dir>/wt`, so one cleanup loop over prompt dirs covers it and codex's (2026-10-15).
+  - `scripts/prepare-reviewer` (2026-10-21, agent-config #6, SES-113): one call renders a prompt
+    and adds its reviewer worktree at `<prompt dir>/wt`, so one cleanup loop over prompt dirs covers
+    every reviewer. `run-codex-reviewer` calls it; a cross-repo reviewer, T3 child or not, gets it in
+    place of the hand-typed `git worktree add` it replaced. Session logs from 2026-10-19 to 10-21
+    held 24 hand-typed reviewer worktrees in 12 sessions, no two alike (short SHAs, prompt dirs
+    picked as "the two newest").
   - in T3, every reviewer runs as a `delegate_task` child task, so the panel shows in T3 with
     transcripts and `task_cancel` (2026-10-19, fleet #45, SES-74). A trial on fleet `2bc43e2` showed
     the Codex child matches `codex exec` on wall time (1m08s vs 1m10s) and output, and returns an
