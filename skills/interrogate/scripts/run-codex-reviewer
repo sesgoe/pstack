@@ -1,34 +1,33 @@
 #!/usr/bin/env bash
-# Run one codex interrogate reviewer: render its prompt, check out <head> in a worktree beside it,
-# run codex exec there, and remove the worktree when codex exits.
+# Run one codex interrogate reviewer: prepare its prompt and worktree (prepare-reviewer), run codex
+# exec in the worktree, and remove the worktree when codex exits.
 # Usage: run-codex-reviewer --model <model> --effort <effort> <render-prompt flags>
 # Prints "prompt=<path> out=<path>" before codex starts; codex writes its review to out=.
 set -euo pipefail
 
-model="" effort="" head="" flags=()
+model="" effort="" flags=()
 while [ $# -gt 0 ]; do
   case $1 in
     --model) model=${2:?}; shift 2 ;;
     --effort) effort=${2:?}; shift 2 ;;
-    --head) head=${2:?}; shift 2 ;;
     *) flags+=("$1"); shift ;;
   esac
 done
-if [ -z "$model" ] || [ -z "$effort" ] || [ -z "$head" ]; then
-  echo "run-codex-reviewer: --model, --effort, and --head <sha> are required" >&2
+if [ -z "$model" ] || [ -z "$effort" ]; then
+  echo "run-codex-reviewer: --model and --effort are required" >&2
   exit 2
 fi
 
-sha=$(git rev-parse --verify -q "$head^{commit}") || { echo "run-codex-reviewer: --head $head: not a commit" >&2; exit 2; }
-p=$("$(dirname "$0")/render-prompt" --head "$sha" "${flags[@]}")
+pid="" wt=""
+trap '[ -z "$wt" ] || git worktree remove -f -f "$wt" || true' EXIT
+trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; wait; exit 130' INT TERM HUP
+ready=$("$(dirname "$0")/prepare-reviewer" "${flags[@]}")
+p=${ready#prompt=}
+p=${p% wt=*}
 dir=${p%/*}
 wt=$dir/wt
 echo "prompt=$p out=$dir/out.md"
 
-pid=""
-trap 'git worktree remove -f -f "$wt" || true' EXIT
-trap '[ -n "$pid" ] && kill "$pid" 2>/dev/null; wait; exit 130' INT TERM HUP
-git worktree add -q --detach "$wt" "$sha"
 codex exec -m "$model" -c "model_reasoning_effort=$effort" --dangerously-bypass-approvals-and-sandbox \
   -C "$wt" -o "$dir/out.md" - < "$p" &
 pid=$!

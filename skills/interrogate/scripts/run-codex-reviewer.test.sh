@@ -79,11 +79,9 @@ check "a failed render fails before any worktree or codex run" "render-prompt: -
 check "  and leaves nothing behind" "1 0 no codex" \
   "$(worktrees) $(find "$scratch/tmp" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ') $([ -e "$scratch/args" ] && echo codex || echo no codex)"
 
-check "a bad --head names it" "run-codex-reviewer: --head nosuch: not a commit" \
+check "a bad --head names it, from prepare-reviewer" "prepare-reviewer: --head nosuch: not a commit" \
   "$("$run" --model m1 --effort high --head nosuch --base HEAD~1 --intent x 2>&1 || true)"
-check "--model is required" "run-codex-reviewer: --model, --effort, and --head <sha> are required" \
+check "--model is required" "run-codex-reviewer: --model and --effort are required" \
   "$("$run" --effort high --head HEAD --base HEAD~1 --intent x 2>&1 || true)"
-check "--head=<sha> is not taken for --head" "run-codex-reviewer: --model, --effort, and --head <sha> are required" \
-  "$("$run" --model m1 --effort high --head=HEAD --base HEAD~1 --intent x 2>&1 || true)"
 
 finish

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Prepare one interrogate reviewer: render its prompt and check out <head> in a worktree beside it.
+# Usage: prepare-reviewer <render-prompt flags>   (run from anywhere in the reviewed repo)
+# Prints "prompt=<path> wt=<path>". The worktree is <prompt dir>/wt, so the cleanup loop over prompt
+# dirs removes it. A failure leaves neither a prompt dir nor a worktree behind.
+set -euo pipefail
+
+head="" flags=()
+while [ $# -gt 0 ]; do
+  case $1 in
+    --head) head=${2:?}; shift 2 ;;
+    *) flags+=("$1"); shift ;;
+  esac
+done
+[ -n "$head" ] || { echo "prepare-reviewer: --head <sha> is required" >&2; exit 2; }
+
+sha=$(git rev-parse --verify -q "$head^{commit}") || { echo "prepare-reviewer: --head $head: not a commit" >&2; exit 2; }
+p=$("$(dirname "$0")/render-prompt" --head "$sha" "${flags[@]}")
+dir=${p%/*}
+git worktree add -q --detach "$dir/wt" "$sha" || { rm -rf "$dir"; exit 1; }
+echo "prompt=$p wt=$dir/wt"
