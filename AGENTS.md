@@ -2,7 +2,7 @@
 
 A fork of pstack. `FORK.md` lists every local edit and the upstream sync steps; record each new edit there.
 
-- Read and follow skills from this checkout's `skills/`, not `~/.claude/skills` or `~/.agents/skills`. The installed copy is pinned in agent-config's `skills.conf` and lags `main`.
+- Read and follow this fork's skills from this checkout's `skills/`, not `~/.claude/skills` or `~/.agents/skills`. The installed copy is pinned in agent-config's `skills.conf` and lags `main`. The user's own skills (`pr-mode`, `retro`, and the copy of `writing-for-agents`) aren't here: they live in `sesgoe/agent-config`'s `skills/`.
 - Run `scripts/check.sh` before committing. A script this fork adds under `skills/*/scripts/` ships with a `<name>.test.sh` beside it, which the check runs.
 - A `.test.sh` sources `scripts/test-lib.sh` for `check` and `finish`. A check that a process stopped also asserts that it ran: `kill -0 ""` reads as stopped.
 - To prove a test catches a bug, break a copy of the script and record the test's exit status beside its FAIL lines. No FAIL and exit 0 means the break never applied.
