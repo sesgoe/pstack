@@ -20,7 +20,7 @@ sha=$(git rev-parse --verify -q "$head^{commit}") || { echo "prepare-reviewer: -
 # git worktree add runs in the background so a signal is handled at once, not after checkout hooks.
 p="" add=""
 discard() {
-  [ -z "$add" ] || { kill "$add" 2>/dev/null; wait "$add" 2>/dev/null || true; }
+  [ -z "$add" ] || { kill "$add" 2>/dev/null || true; wait "$add" 2>/dev/null || true; }
   [ -z "$p" ] || { git worktree remove -f -f "${p%/*}/wt" 2>/dev/null || true; rm -rf "${p%/*}"; }
 }
 trap 'discard; exit 130' INT TERM HUP
