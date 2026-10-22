@@ -21,6 +21,9 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     unsandboxed access, so a Claude-led review gets an OpenAI reviewer (2026-10-08);
   - every reviewer runs in its own git worktree (Claude Code `isolation: "worktree"`) and first
     checks out the reviewed SHA, because that worktree starts at the remote's default branch (2026-10-08).
+  - the intent names the thing the user will touch (a link, a page, a command, and the client that
+    opens it), and **Executed** says whether anyone checked it; before an edge-case finding goes in
+    Act On, the lead counts its starting condition in live data (2026-10-22, SES-135 retro).
   - a fix-round series gets one last whole-series review before APPROVE, and a script that writes
     outside the worktree runs end to end in one named reviewer only (2026-10-13).
   - from a retro on a 19-round review loop (2026-10-13): the intent paragraph names the threat

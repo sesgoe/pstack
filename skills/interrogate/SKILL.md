@@ -27,6 +27,8 @@ Before spawning reviewers, state the intent in one clear paragraph from the user
 
 The paragraph names the threat model: who sends the traffic or calls the code, what that client actually sends, the environment it runs in (config, filenames, locale), and what a failure costs. A finding that needs a client, input, or environment outside it goes under Noted.
 
+It also names the thing the user will touch: the link they click, the page, the command, and the client that opens it. Reviewers check that thing where it is used, not only where the code stores or builds it (a link Linear stored fine that T3 couldn't open passed six rounds).
+
 ## Step 3, Spawn Reviewers
 
 Launch all reviewers in a single message with the Task tool, one per entry on the `interrogate reviewers` line in the pstack settings file (`~/.cursor/rules/pstack-models.mdc` in Cursor, `~/.agents/pstack-models.md` in other harnesses), labeled Reviewer A, B, and so on to match the entry count. If the file or that line is missing, use the table defaults.
@@ -99,6 +101,8 @@ You are the lead reviewer, a pragmatic senior engineer, not a neutral aggregator
 - **Noted**. Technically valid but not actionable. Context-dependent, premature optimization, or low-impact at this stage.
 - **Dismissed**. Wrong, nitpicky, or missing context, with a brief reason.
 
+Before an edge-case finding goes in Act On, count how often its starting condition occurs in live data. At zero, offer leaving the case out, stated in the code or docs, as the fix: patching each rare case makes the next round find bugs in the patches.
+
 ## Output Format
 
 ### Intent
@@ -126,6 +130,6 @@ You are the lead reviewer, a pragmatic senior engineer, not a neutral aggregator
 [One line each for separation of concerns, programming by intention, encapsulation, high cohesion, low coupling: OK, or the violation with file:line.]
 
 ### Executed
-[What the reviewers actually ran, against head and base. Green tests alone are not evidence.]
+[What the reviewers actually ran, against head and base. Green tests alone are not evidence. Say whether anyone checked the thing the user will touch (Step 2), or mark it unverified.]
 
 End with exactly one line: `VERDICT: APPROVE` when Act On is empty, otherwise `VERDICT: CHANGES`.
