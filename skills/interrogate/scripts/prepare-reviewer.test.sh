@@ -57,9 +57,10 @@ rm "$hook"
 check "a checkout hook that fails exits nonzero and leaves no registered worktree or prompt dir" "1 1 0" \
   "$status $(worktrees) $(leftovers)"
 
+mkdir "$scratch/empty"
 check "outside a git checkout it says where to run it" \
   "prepare-reviewer: $scratch/empty is not a git checkout; run it from the reviewed repo's git checkout (a jj workspace has none)" \
-  "$(mkdir "$scratch/empty" && cd "$scratch/empty" && GIT_CEILING_DIRECTORIES=$scratch "$prep" --head HEAD --base HEAD~1 --intent x 2>&1 || true)"
+  "$(cd "$scratch/empty" && { GIT_CEILING_DIRECTORIES=$scratch "$prep" --head HEAD --base HEAD~1 --intent x 2>&1 || true; })"
 
 check "a bad --head names it" "prepare-reviewer: --head nosuch: not a commit" \
   "$("$prep" --head nosuch --base HEAD~1 --intent x 2>&1 || true)"
