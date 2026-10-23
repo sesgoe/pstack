@@ -7,7 +7,7 @@ source "$(dirname "$0")/../../../scripts/test-lib.sh"
 render_prompt=${RENDER_PROMPT:-$(cd "$(dirname "$0")" && pwd)/render-prompt}
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
-export TMPDIR=$scratch GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+export TMPDIR=$scratch HOME=$scratch/home GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 
 repo=$scratch/repo
@@ -85,6 +85,13 @@ check "the intent is quoted line by line and kept literal" '> Para {HEAD_SHA} on
 # shellcheck disable=SC2016
 check "--runner adds the runner sentence" 'The prompt names you the runner of `deploy.sh`, so run it end to end.' \
   "$(grep -o 'The prompt names you the runner of .*' "$p")"
+
+dont_flag() { sed -n "/^## Don't Flag$/,/^## Instructions$/p" "$1" | sed '1,3d;$d' | grep .; }
+check "without pedantic.md, Don't Flag says None." 'None.' "$(dont_flag "$(render --intent x)")"
+mkdir -p "$HOME/.agents"
+printf -- '- **Two label clicks racing**: one user clicks.\n- Second {HEAD_SHA} case.\n' > "$HOME/.agents/pedantic.md"
+check "the user's pedantic.md fills Don't Flag, literally" '- **Two label clicks racing**: one user clicks.
+- Second {HEAD_SHA} case.' "$(dont_flag "$(render --intent x)")"
 
 check "a typo'd --exclude fails" "render-prompt: --exclude nosuch.lock: matches no changed path" \
   "$(render --intent x --exclude nosuch.lock 2>&1 || true)"

@@ -54,6 +54,9 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     place of the hand-typed `git worktree add` it replaced. Session logs from 2026-10-19 to 10-21
     held 24 hand-typed reviewer worktrees in 12 sessions, no two alike (short SHAs, prompt dirs
     picked as "the two newest").
+  - `render-prompt` fills the reviewer prompt's **Don't Flag** section from `~/.agents/pedantic.md`, or
+    `None.` without it (2026-10-22, Linear SES-142): the cases the user called `pedantic`. The cases
+    live in `sesgoe/agent-config`, which is private, and its installer places the file.
   - in T3, every reviewer runs as a `delegate_task` child task, so the panel shows in T3 with
     transcripts and `task_cancel` (2026-10-19, fleet #45, SES-74). A trial on fleet `2bc43e2` showed
     the Codex child matches `codex exec` on wall time (1m08s vs 1m10s) and output, and returns an

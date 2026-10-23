@@ -30,6 +30,12 @@ Review whether the code achieves this intent well. Do NOT question the intent it
 
 {EXECUTE_AND_PROBE_CONTENTS}
 
+## Don't Flag
+
+Cases the user has said not to flag. Don't report one, or another case of the same kind, unless its reason doesn't hold for this code.
+
+{DONT_FLAG}
+
 ## Instructions
 
 Review the code through every lens in the rubric and the code-quality lens above that you find relevant. Do not force lenses that don't apply. A simple bug fix does not need paragraphs about architectural integrity. The execute-and-probe lens always applies: write your test inputs before reading the implementation, run them, and report on every design principle.
