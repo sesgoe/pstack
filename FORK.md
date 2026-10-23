@@ -16,7 +16,9 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
   - fix commits get their own review;
   - the verdict ends with `VERDICT: APPROVE` or `VERDICT: CHANGES`;
   - model invocation is allowed (no `disable-model-invocation`), so agents can run a review on
-    their own work without the user typing `/interrogate`;
+    their own work without the user typing `/interrogate`; the description names when: the user's
+    words for a review, or the review step of pr-mode or poteto-mode's opening-a-pr, not every code
+    review (Linear SES-117, 2026-10-23), matching the global AGENTS.md's "Review only under `/poteto-mode`";
   - `codex:<model>` reviewer entries run through `codex exec` in their own worktree, with full,
     unsandboxed access, so a Claude-led review gets an OpenAI reviewer (2026-10-08);
   - every reviewer runs in its own git worktree (Claude Code `isolation: "worktree"`) and first
