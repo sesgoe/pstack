@@ -16,6 +16,7 @@ Identify what to review from context:
 - If the user's message references recent work, gather the relevant files.
 - A fix commit made in response to an earlier review is its own scope and gets its own review. Fixes create bugs.
 - Before `VERDICT: APPROVE` on a change that took more than one fix round, review the whole series against the base once, as the final gate. Each earlier fix round reviews only its own fix commit. A series-pass finding that isn't a regression from the fixes goes to Consider.
+- A review has at most three rounds, the first review and the whole-series gate among them. When the third still has Act On findings, stop fixing. Write `VERDICT: CHANGES` with **Rethink** (Output Format): findings that keep coming in round after round usually mean the approach is wrong, not that one more fix is missing. Each round after the first passes the earlier rounds' findings with `--prior` (Step 3).
 
 Reviewers are fresh subagents that did not write the code. The author's own pass over its work is a checklist pass, not a review.
 
@@ -49,17 +50,17 @@ A worktree doesn't contain a script that writes outside it (to another host, or 
 Render each reviewer's prompt with one call from anywhere in the reviewed repo, where `<skill>` is this skill's directory:
 
 ```sh
-<skill>/scripts/render-prompt --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
+<skill>/scripts/render-prompt --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] [--prior <file>] --intent - <<'EOF'
 <Step 2 paragraph>
 EOF
 ```
 
-It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, given from the repo root, such as `flake.lock`; an exclude that matches no changed path is an error; exclude both sides of a rename, or its directory, since one side alone shows the other as a whole added or deleted file), the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses, and the cases the user said not to flag (`~/.agents/pedantic.md`, else `None.`). It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. Every subagent reviewer's whole prompt, in any harness, is `Read <path> in full and follow it.`, after the `Work only in` line for a reviewer from `prepare-reviewer`. A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, `{DONT_FLAG}` as `render-prompt` fills it, and `{RUNNER}` empty unless that reviewer is the runner. Render every subagent reviewer's prompt first, then send the codex background call and the subagent spawns in one message.
+It fills `references/reviewer-prompt.md` with the intent, the full head SHA, the `<base>...<head>` diff (minus each `--exclude` path, given from the repo root, such as `flake.lock`; an exclude that matches no changed path is an error; exclude both sides of a rename, or its directory, since one side alone shows the other as a whole added or deleted file), the rubric, code-quality, and execute-and-probe references, so every model applies all three lenses, the cases the user said not to flag (`~/.agents/pedantic.md`, else `None.`), and the findings earlier rounds raised (`--prior`, a file with one line per finding and its bucket, such as `Dismissed: <title>, <reason>`, else `None.`), so reviewers don't report them again. It writes `prompt.md` into a fresh temp directory and prints that path. The quoted heredoc keeps the shell from expanding backticks or `$` in the paragraph. Every subagent reviewer's whole prompt, in any harness, is `Read <path> in full and follow it.`, after the `Work only in` line for a reviewer from `prepare-reviewer`. A scope that isn't a diff (files the user points at) still gets the template filled by hand: the intent as a blockquote, `{DONT_FLAG}` and `{PRIOR_FINDINGS}` as `render-prompt` fills them, and `{RUNNER}` empty unless that reviewer is the runner. Render every subagent reviewer's prompt first, then send the codex background call and the subagent spawns in one message.
 
 A reviewer that needs its own worktree (see above) gets `prepare-reviewer` in place of `render-prompt`, with the same flags, run from the reviewed repo's git checkout (from a jj workspace, its colocated main checkout):
 
 ```sh
-<skill>/scripts/prepare-reviewer --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] --intent - <<'EOF'
+<skill>/scripts/prepare-reviewer --head <sha> --base <ref> [--exclude <path>]... [--runner <script>] [--prior <file>] --intent - <<'EOF'
 <Step 2 paragraph>
 EOF
 ```
@@ -111,6 +112,10 @@ You are the lead reviewer, a pragmatic senior engineer, not a neutral aggregator
 - **Noted**. Technically valid but not actionable. Context-dependent, premature optimization, or low-impact at this stage.
 - **Dismissed**. Wrong, nitpicky, or missing context, with a brief reason.
 
+A finding whose faulty lines the change didn't add, change, or make reachable (the reviewer's **Introduced** line, checked with `git blame` on the base) goes under **Pre-existing**, not a bucket: it's real, but fixing it here makes the change bigger and the next round longer. The author files the list as one issue in the repo, apart from this change.
+
+An Act On finding with a **Class** gets fixed everywhere the class occurs in the change, in one commit, not only at the reported line.
+
 Before an edge-case finding goes in Act On, count how often its starting condition occurs in live data. At zero, offer leaving the case out, stated in the code or docs, as the fix: patching each rare case makes the next round find bugs in the patches.
 
 ## Output Format
@@ -132,6 +137,12 @@ Before an edge-case finding goes in Act On, count how often its starting conditi
 
 ### Dismissed
 [Each with a brief rationale.]
+
+### Pre-existing
+[Each fault the change didn't introduce, with its location and the models that raised it, for the author to file as one issue. "None." when empty.]
+
+### Rethink
+[Only on a third round that still has Act On findings: the classes of finding that kept coming back, what they say about the approach, and the alternative you'd try. The user decides whether to rework or ship with them.]
 
 ### Agreement Map
 [Where models agreed and diverged, and what that pattern tells us.]

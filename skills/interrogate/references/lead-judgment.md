@@ -33,6 +33,10 @@ When a second finding of the same class, inside the threat model, lands in one u
 
 In a review loop, acting on a finding costs its fix plus the next round's review of that fix. "Real and cheap to fix" is no reason to Act On. Where a finding closes either way, narrow or delete before adding validation or a mechanism: added code is the next round's findings. An interface the task specified keeps its specified semantics. A flag specified as a pass-through to a tool (a git pathspec) stays one; wrapping it in your own rules turns the tool's documented behaviour into findings.
 
+### Old Code Isn't This Change's Bug
+
+Most findings in a re-review sit in code that was there before the change. Check each with `git blame` on the base: a fault the change didn't add, change, or make reachable goes under Pre-existing, filed apart, however real it is. Fixing it here grows the diff, and the next round finds a little more old code to report.
+
 ### Premature Abstraction Warnings
 
 Reviewers often suggest extracting functions, adding interfaces, or creating abstractions. Does this code need to change in a second way? If not, the abstraction is premature. Simple inline code that works beats a clean abstraction that's overkill for the current scope.

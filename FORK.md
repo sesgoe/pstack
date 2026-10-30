@@ -64,13 +64,20 @@ A fork of [backnotprop/pstack](https://github.com/backnotprop/pstack) (itself a 
     the Codex child matches `codex exec` on wall time (1m08s vs 1m10s) and output, and returns an
     8 KB result whole in `summary`. Children don't show in the sidebar, but archiving one keeps its
     worktree and branch, hence the per-child cleanup line. Outside T3, nothing changes.
+  - review cycles, from Addy Osmani's article on review loops that mostly re-find old bugs (2026-10-29):
+    a review has at most three rounds, the whole-series gate among them, and a third with Act On
+    findings ends in **Rethink** rather than another fix; each finding names its **Class** (fixed
+    everywhere at once) and whether this change **Introduced** it, and pre-existing ones go to a
+    **Pre-existing** list filed as one issue; `render-prompt --prior <file>` fills an **Already
+    Raised** section so later rounds don't report earlier findings again.
 
 - `skills/poteto-mode`: a "The user approves each push" non-negotiable and a **PR hand-off** step
   in `playbooks/opening-a-pr.md`. When the user's instructions reserve that call, every playbook
   stops before the first push: commits on a branch, an `interrogate` review (repeated after each
   fix) ending in `VERDICT: APPROVE`, then a hand-off with the PR title and body that asks for the
   go-ahead. On the go-ahead the agent pushes and opens the PRs. Force-push, merge, and auto-merge
-  need their own ask.
+  need their own ask. Since 2026-10-29 the review stops at interrogate's third round, and the hand-off
+  carries its Rethink and the Pre-existing issue.
   - The PR body has a `## Risk Analysis` section after `## Blast Radius` (2026-10-10): the door
     and rollback, rollout order and failure window, failure modes, and mitigations taken or
     skipped. Blast Radius keeps only who and what the change touches.

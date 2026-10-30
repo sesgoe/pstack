@@ -5,7 +5,7 @@ Invoked at the end of every other playbook.
 **PR hand-off.** When the user approves each push (see "The user approves each push" in `SKILL.md`), follow this playbook up to the first push, then stop and ask:
 
 1. Commit to a branch in a worktree, shaped and ordered per **Commits**.
-2. Run `interrogate` on the branch against its base. Fix every Act On finding in a new commit, and run `interrogate` again on that fix. The hand-off waits for `VERDICT: APPROVE`.
+2. Run `interrogate` on the branch against its base. Fix every Act On finding in a new commit, and run `interrogate` again on that fix. The hand-off waits for `VERDICT: APPROVE`, or for interrogate's third round: at three rounds the hand-off carries its **Rethink** and the user decides. File its **Pre-existing** list as one issue in the repo and name it in the hand-off.
 3. Run `/no-comments` and the deslop pass from **PRs**.
 4. Reply with the hand-off: the repo path and branch, the base branch, the commits, the final `interrogate` verdict with anything left in Consider, and the PR title and body per **Titles** and **Descriptions**. For a stack, list the branches bottom-up. Ask for the go-ahead.
 

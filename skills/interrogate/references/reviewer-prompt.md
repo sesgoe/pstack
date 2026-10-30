@@ -36,6 +36,12 @@ Cases the user has said not to flag. Don't report one, or another case of the sa
 
 {DONT_FLAG}
 
+## Already Raised
+
+Findings earlier rounds of this review raised and the lead already judged. Don't report one again, or another instance of it, unless this change made it worse. A finding that names the same class in new places counts as new.
+
+{PRIOR_FINDINGS}
+
 ## Instructions
 
 Review the code through every lens in the rubric and the code-quality lens above that you find relevant. Do not force lenses that don't apply. A simple bug fix does not need paragraphs about architectural integrity. The execute-and-probe lens always applies: write your test inputs before reading the implementation, run them, and report on every design principle.
@@ -50,7 +56,9 @@ For each finding, provide:
    - `nit`: Style, naming, minor improvement.
 2. **Finding**: What the problem is, in concrete terms. Reference specific lines/functions.
 3. **Evidence**: Why you believe this is a problem. Show your reasoning. Don't just assert. Where you executed something, give a reproduction: input, expected, actual.
-4. **Suggestion** (optional): What you'd do instead, only if you have a concrete alternative.
+4. **Class**: The kind of bug in a few words (an unquoted shell variable, a missing timeout on a network call), and every other place it occurs in the code under review and the files around it. Search for them: the author fixes the class, not the one line.
+5. **Introduced**: `this change` when the diff added or changed the faulty lines or made an old fault reachable, otherwise `pre-existing` (check with `git blame` on the base). Report a pre-existing fault all the same: the lead files it apart from this change.
+6. **Suggestion** (optional): What you'd do instead, only if you have a concrete alternative.
 
 A good finding references specific code, not vague concerns ("this could be better"). It distinguishes between "this is broken" and "I would have done this differently". It considers the stated intent. A finding that ignores the context of what's being built is a bad finding.
 
@@ -67,6 +75,8 @@ Return your findings as a structured list. Your findings are never the complete 
 **Location**: file:line or function name
 **Finding**: What's wrong
 **Evidence**: Why this matters
+**Class**: The kind of bug, and every other place it occurs
+**Introduced**: this change | pre-existing
 **Suggestion**: (optional) What to do instead
 
 ### 2. [Severity] Short title

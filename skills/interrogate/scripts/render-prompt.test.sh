@@ -86,13 +86,20 @@ check "the intent is quoted line by line and kept literal" '> Para {HEAD_SHA} on
 check "--runner adds the runner sentence" 'The prompt names you the runner of `deploy.sh`, so run it end to end.' \
   "$(grep -o 'The prompt names you the runner of .*' "$p")"
 
-dont_flag() { sed -n "/^## Don't Flag$/,/^## Instructions$/p" "$1" | sed '1,3d;$d' | grep .; }
+dont_flag() { sed -n "/^## Don't Flag$/,/^## Already Raised$/p" "$1" | sed '1,3d;$d' | grep .; }
 check "without pedantic.md, Don't Flag says None." 'None.' "$(dont_flag "$(render --intent x)")"
 mkdir -p "$HOME/.agents"
 printf -- '- **Two label clicks racing**: one user clicks.\n- Second {HEAD_SHA} case.\n' > "$HOME/.agents/pedantic.md"
 check "the user's pedantic.md fills Don't Flag, literally" '- **Two label clicks racing**: one user clicks.
 - Second {HEAD_SHA} case.' "$(dont_flag "$(render --intent x)")"
 
+prior_findings() { sed -n "/^## Already Raised$/,/^## Instructions$/p" "$1" | sed '1,3d;$d' | grep .; }
+check "without --prior, Already Raised says None." 'None.' "$(prior_findings "$(render --intent x)")"
+printf -- '- Dismissed: {HEAD_SHA} race in top.txt.\n' > "$scratch/prior.md"
+check "--prior fills Already Raised, literally" '- Dismissed: {HEAD_SHA} race in top.txt.' \
+  "$(prior_findings "$(render --intent x --prior "$scratch/prior.md")")"
+check "a missing --prior file fails" "render-prompt: --prior $scratch/nosuch.md: No such file or directory" \
+  "$(render --intent x --prior "$scratch/nosuch.md" 2>&1 || true)"
 check "a typo'd --exclude fails" "render-prompt: --exclude nosuch.lock: matches no changed path" \
   "$(render --intent x --exclude nosuch.lock 2>&1 || true)"
 check "an empty intent fails" "render-prompt: empty intent" "$(render --intent - </dev/null 2>&1 || true)"

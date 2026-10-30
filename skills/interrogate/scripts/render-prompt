@@ -68,6 +68,8 @@ def main():
                              " exclude both sides of a rename, or its directory")
     parser.add_argument("--runner", metavar="SCRIPT",
                         help="name this reviewer the runner of SCRIPT, which writes outside the worktree")
+    parser.add_argument("--prior", metavar="FILE",
+                        help="findings earlier rounds of this review already raised, which reviewers don't report again")
     args = parser.parse_args()
 
     head = git("rev-parse", "--verify", f"{args.head}^{{commit}}").strip()
@@ -85,6 +87,13 @@ def main():
     if args.runner:
         runner = f" The prompt names you the runner of `{args.runner}`, so run it end to end."
 
+    prior = "None."
+    if args.prior:
+        try:
+            prior = Path(args.prior).read_text(encoding="utf-8").strip() or "None."
+        except OSError as err:
+            sys.exit(f"render-prompt: --prior {args.prior}: {err.strerror}")
+
     values = {
         "INTENT": quoted(intent),
         "HEAD_SHA": head,
@@ -93,6 +102,7 @@ def main():
         "CODE_QUALITY_CONTENTS": reference("code-quality-review.md"),
         "EXECUTE_AND_PROBE_CONTENTS": reference("execute-and-probe.md"),
         "DONT_FLAG": dont_flag(),
+        "PRIOR_FINDINGS": prior,
         "RUNNER": runner,
     }
     template = reference("reviewer-prompt.md").split("\n---\n", 1)[1]
